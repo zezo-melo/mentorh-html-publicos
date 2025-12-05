@@ -1,0 +1,707 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>OSM · Painel Inteligente – Produtividade N1/N2 por Operador</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg-main: #020617;
+      --bg-card: #020617;
+      --border-soft: #1f2937;
+      --text-main: #f9fafb;
+      --text-soft: #9ca3af;
+      --accent: #22c55e;
+      --accent-strong: #22ff88;
+      --gold: #facc15;
+      --blue: #38bdf8;
+      --red: #fb5f5f;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #020617 0, #020617 45%, #000 100%);
+      color: var(--text-main);
+    }
+    .app-shell {
+      max-width: 1200px;
+      margin: 18px auto;
+      background: radial-gradient(circle at top, rgba(15,23,42,0.96), #020617 70%);
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,0.45);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      overflow: hidden;
+      min-height: 680px;
+    }
+    @media (max-width: 900px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+        margin: 8px;
+      }
+    }
+    .sidebar {
+      padding: 18px 20px 22px 20px;
+      background:
+        radial-gradient(circle at top left, rgba(34,197,94,0.22), transparent 60%),
+        #020617;
+      border-right: 1px solid var(--border-soft);
+    }
+    .main {
+      padding: 20px 22px 22px 22px;
+      background:
+        radial-gradient(circle at top right, rgba(56,189,248,0.18), transparent 55%),
+        #020617;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .top-title {
+      font-size: .9rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .pill-view {
+      font-size: .7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: rgba(15,23,42,0.9);
+      color: var(--text-soft);
+    }
+    .avatar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .avatar-ring {
+      width: 96px;
+      height: 96px;
+      border-radius: 999px;
+      padding: 3px;
+      background: conic-gradient(from 180deg, #22ff88, #38bdf8, #facc15, #22ff88);
+      box-shadow: 0 0 26px rgba(34,197,94,0.65);
+    }
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      background: url("https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=400") center/cover no-repeat;
+      border: 3px solid #020617;
+    }
+    .name { margin-top: 10px; font-size: 1.05rem; font-weight: 600; text-align: center; }
+    .role { font-size: .8rem; color: var(--text-soft); text-align: center; }
+    .badge-medal {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: radial-gradient(circle at top, rgba(34,197,94,0.26), rgba(15,23,42,1));
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: .75rem;
+    }
+    .badge-medal-dot {
+      width: 8px; height: 8px; border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(34,197,94,0.75);
+    }
+    .meta-chip-row {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+    .chip {
+      font-size: .7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: rgba(15,23,42,0.9);
+      color: var(--text-soft);
+    }
+    .chip-strong {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+    }
+    .section-title {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      color: var(--text-soft);
+      margin: 14px 0 6px 0;
+    }
+    .info-block {
+      background: radial-gradient(circle at top left, rgba(15,23,42,1), rgba(3,7,18,1));
+      border-radius: 14px;
+      border: 1px solid var(--border-soft);
+      padding: 8px 10px;
+      font-size: .8rem;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+    .info-label { color: var(--text-soft); font-size: .72rem; }
+    .info-value { font-size: .8rem; }
+    .log-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: .78rem;
+      margin-top: 4px;
+    }
+    .log-pill {
+      font-size: .7rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      padding: 2px 8px;
+      background: rgba(15,23,42,0.9);
+      color: var(--text-soft);
+    }
+    .log-pill.ok { border-color: var(--accent); color: var(--accent-strong); }
+    .main-header {
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .main-header h1 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+    .pill-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .72rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #22c55e99;
+      background: rgba(15,23,42,0.9);
+      color: var(--accent-strong);
+    }
+    .pill-status .dot {
+      width: 7px; height: 7px; border-radius: 999px;
+      background: var(--accent-strong);
+      box-shadow: 0 0 10px rgba(34,197,94,0.8);
+    }
+    .grid-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
+      gap: 10px;
+    }
+    @media (max-width: 1000px) {
+      .grid-main { grid-template-columns: 1fr; }
+    }
+    .card {
+      border-radius: 16px;
+      border: 1px solid var(--border-soft);
+      background: radial-gradient(circle at top left, rgba(31,41,55,0.9), rgba(3,7,18,1));
+      padding: 10px 12px;
+      font-size: .82rem;
+    }
+    .card h2 { font-size: .9rem; margin: 0 0 4px 0; }
+    .card-sub { font-size: .76rem; color: var(--text-soft); margin-bottom: 6px; }
+    .chat-box {
+      background: rgba(8,47,73,0.7);
+      border-radius: 12px;
+      border: 1px dashed #0ea5e9;
+      padding: 8px 10px;
+      font-size: .8rem;
+      color: #e0f2fe;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .chat-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, #38bdf8, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .chat-content strong { color: #7dd3fc; }
+    .chat-list {
+      margin: 4px 0 0;
+      padding-left: 18px;
+      font-size: .78rem;
+    }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 6px;
+      font-size: .75rem;
+    }
+    @media (max-width: 700px) {
+      .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .kpi-card {
+      background: rgba(15,23,42,0.9);
+      border-radius: 10px;
+      border: 1px solid #111827;
+      padding: 6px 8px;
+    }
+    .kpi-label { color: var(--text-soft); font-size: .7rem; }
+    .kpi-value { font-size: .9rem; font-weight: 600; }
+    .kpi-tag-good { color: #22ff88; }
+    .kpi-tag-mid { color: #facc15; }
+    .kpi-tag-bad { color: #fb5f5f; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .76rem;
+      margin-top: 4px;
+    }
+    thead {
+      background: rgba(15,23,42,0.9);
+    }
+    th, td {
+      padding: 4px 5px;
+      text-align: left;
+    }
+    th {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--text-soft);
+      border-bottom: 1px solid #111827;
+    }
+    tbody tr:nth-child(even) {
+      background: rgba(15,23,42,0.7);
+    }
+    tbody tr:nth-child(odd) {
+      background: rgba(3,7,18,0.7);
+    }
+    .status-pill {
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: .68rem;
+      border: 1px solid #4b5563;
+    }
+    .status-fila { border-color: #64748b; color: #e5e7eb; }
+    .status-analise { border-color: #38bdf8; color: #bae6fd; }
+    .status-cliente { border-color: #facc15; color: #facc15; }
+    .status-homolog { border-color: #22c55e; color: #bbf7d0; }
+    .sla-pill {
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: .68rem;
+      border: 1px solid #4b5563;
+    }
+    .sla-ok { color: #22ff88; border-color: #22c55e; }
+    .sla-risco { color: #facc15; border-color: #facc15; }
+    .sla-estouro { color: #fb5f5f; border-color: #fb5f5f; }
+    .risk-pill {
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: .68rem;
+      border: 1px solid #4b5563;
+    }
+    .risk-baixo { color: #22ff88; border-color: #22c55e; }
+    .risk-medio { color: #facc15; border-color: #facc15; }
+    .risk-alto { color: #fb5f5f; border-color: #fb5f5f; }
+    .badge-mini-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .badge-mini {
+      font-size: .7rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: rgba(15,23,42,0.9);
+      color: var(--text-soft);
+    }
+    canvas {
+      width: 100%;
+      height: 230px;
+    }
+    .footer-note {
+      margin-top: 10px;
+      font-size: .7rem;
+      color: var(--text-soft);
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="top-bar">
+        <div class="top-title">Painel inteligente · OSM</div>
+        <div class="pill-view">Visão por operador</div>
+      </div>
+
+      <div class="avatar-wrap">
+        <div class="avatar-ring">
+          <div class="avatar"></div>
+        </div>
+        <div class="name">Thais Oliveira Cavalcanti</div>
+        <div class="role">Analista de Suporte N1/N2 · Núcleo Suporte</div>
+        <div class="badge-medal">
+          <span class="badge-medal-dot"></span>
+          Medalha de Conhecimento · Ouro · Top 15% N1/N2
+        </div>
+        <div class="meta-chip-row">
+          <span class="chip chip-strong">Produtividade hoje: 132 pts</span>
+          <span class="chip">Média últimos 30 dias: 118 pts/dia</span>
+          <span class="chip">Chamados ativos: 14</span>
+        </div>
+      </div>
+
+      <div class="section-title">Log & jornada</div>
+      <div class="info-block">
+        <div class="info-grid">
+          <div>
+            <div class="info-label">Horário 1º log</div>
+            <div class="info-value">08:07</div>
+          </div>
+          <div>
+            <div class="info-label">Último log</div>
+            <div class="info-value">16:52</div>
+          </div>
+          <div>
+            <div class="info-label">Horas logado hoje</div>
+            <div class="info-value">7h 41min</div>
+          </div>
+          <div>
+            <div class="info-label">Pausa registrada</div>
+            <div class="info-value">0h 38min</div>
+          </div>
+        </div>
+        <div class="log-row">
+          <span class="log-pill ok">Jornada adequada</span>
+          <span class="log-pill">Meta: ≥ 6h focadas</span>
+        </div>
+      </div>
+
+      <div class="section-title">Clientes atendidos hoje</div>
+      <div class="info-block">
+        <div class="info-label">Carteira ativa</div>
+        <div class="info-value" style="margin-bottom:4px;">
+          Prefeitura A · Prefeitura B · Estado X · Câmara Y
+        </div>
+        <div class="info-label">Foco do dia (IA)</div>
+        <div class="info-value">
+          <ul style="margin:4px 0 0;padding-left:18px;font-size:.78rem;">
+            <li>Reduzir backlog &gt; 7 dias da Prefeitura A</li>
+            <li>Fechar chamados em homologação do Estado X</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-title">Perfil de atendimento</div>
+      <div class="info-block">
+        <div class="info-grid">
+          <div>
+            <div class="info-label">% N1 vs N2 (últimos 30d)</div>
+            <div class="info-value">N1: 68% · N2: 32%</div>
+          </div>
+          <div>
+            <div class="info-label">Uso da base de conhecimento</div>
+            <div class="info-value">61% dos chamados com artigo vinculado</div>
+          </div>
+          <div>
+            <div class="info-label">Satisfação média</div>
+            <div class="info-value">4,6 / 5,0</div>
+          </div>
+          <div>
+            <div class="info-label">Reabertura</div>
+            <div class="info-value">3,2% (meta: ≤ 5%)</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="main-header">
+        <div>
+          <h1>Produtividade diária & risco de SLA – N1/N2</h1>
+          <div style="font-size:.8rem;color:var(--text-soft);">
+            Visão em tempo quase real dos chamados, SLAs, risco de glosa e comparação com demais operadores.
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+          <span class="pill-status">
+            <span class="dot"></span>
+            Dia dentro do planejado · 0 chamados em risco crítico
+          </span>
+        </div>
+      </div>
+
+      <!-- CHATBOT PRIORIDADES -->
+      <section class="card">
+        <h2>Coach IA de Produtividade – N1/N2</h2>
+        <div class="card-sub">
+          Chat de boas-vindas e priorização automática de foco diário e semanal, com base no histórico da Desk Manager.
+        </div>
+        <div class="chat-box">
+          <div class="chat-avatar">🤖</div>
+          <div class="chat-content">
+            <strong>Bom dia, Thais!</strong> Hoje você está com <strong>14 chamados ativos</strong> e <strong>3</strong> com maior sensibilidade de SLA.
+            <ul class="chat-list">
+              <li><strong>1º</strong> – Fechar 2 chamados em homologação do Estado X (risco médio de glosa).</li>
+              <li><strong>2º</strong> – Atacar chamados &gt; 5 dias da Prefeitura A (impacto direto em SLA de contrato).</li>
+              <li><strong>3º</strong> – Criar 1 novo artigo de base de conhecimento a partir de chamado complexo resolvido hoje.</li>
+            </ul>
+            <div style="margin-top:4px;font-size:.76rem;color:#bae6fd;">
+              Na visão da semana, recomendo reduzir o saldo de chamados “Em análise” para no máximo 6 e manter 0 chamados acima de 30 dias.
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">Chamados recebidos hoje</div>
+            <div class="kpi-value">18</div>
+            <div class="kpi-label">Encerrados: <span class="kpi-tag-good">16</span></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Idade média dos chamados</div>
+            <div class="kpi-value">3,2 dias</div>
+            <div class="kpi-label">Meta: ≤ 4 dias</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">SLA pessoal (30d)</div>
+            <div class="kpi-value kpi-tag-good">93%</div>
+            <div class="kpi-label">Meta: ≥ 90%</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Risco de glosa estimado</div>
+            <div class="kpi-value kpi-tag-mid">Baixo · 7%</div>
+            <div class="kpi-label">2 chamados monitorados</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid-main">
+        <!-- COLUNA ESQUERDA: HISTÓRICO DE OCORRÊNCIAS -->
+        <section class="card">
+          <h2>Ocorrências do dia · N1/N2</h2>
+          <div class="card-sub">
+            Histórico das ocorrências com status, datas, SLA, risco de glosa e estimativa de fechamento com base em histórico.
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Módulo</th>
+                <th>Status</th>
+                <th>Criação</th>
+                <th>Últ. atualização</th>
+                <th>SLA</th>
+                <th>Risco</th>
+                <th>Estimativa fechamento</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>DM-8421</td>
+                <td>Prefeitura A</td>
+                <td>Folha</td>
+                <td><span class="status-pill status-analise">Em análise (N1)</span></td>
+                <td>28/11 · 10:14</td>
+                <td>02/12 · 09:32</td>
+                <td><span class="sla-pill sla-risco">SLA 80% · 1d</span></td>
+                <td><span class="risk-pill risk-medio">Médio</span></td>
+                <td>03/12 · Tarde</td>
+              </tr>
+              <tr>
+                <td>DM-8479</td>
+                <td>Prefeitura B</td>
+                <td>Mensageria</td>
+                <td><span class="status-pill status-fila">Na fila N2</span></td>
+                <td>30/11 · 15:42</td>
+                <td>02/12 · 08:11</td>
+                <td><span class="sla-pill sla-ok">SLA 95% · 3d</span></td>
+                <td><span class="risk-pill risk-baixo">Baixo</span></td>
+                <td>04/12 · Manhã</td>
+              </tr>
+              <tr>
+                <td>DM-8533</td>
+                <td>Estado X</td>
+                <td>Carreira</td>
+                <td><span class="status-pill status-homolog">Em homologação</span></td>
+                <td>25/11 · 11:05</td>
+                <td>01/12 · 17:49</td>
+                <td><span class="sla-pill sla-estouro">SLA 60% · vencido</span></td>
+                <td><span class="risk-pill risk-alto">Alto</span></td>
+                <td>Hoje · Priorizar</td>
+              </tr>
+              <tr>
+                <td>DM-8597</td>
+                <td>Câmara Y</td>
+                <td>Ponto</td>
+                <td><span class="status-pill status-cliente">Aguardando cliente</span></td>
+                <td>26/11 · 09:28</td>
+                <td>29/11 · 16:03</td>
+                <td><span class="sla-pill sla-ok">SLA pausado</span></td>
+                <td><span class="risk-pill risk-baixo">Baixo</span></td>
+                <td>Assim que cliente responder</td>
+              </tr>
+              <tr>
+                <td>DM-8620</td>
+                <td>Prefeitura A</td>
+                <td>Benefícios</td>
+                <td><span class="status-pill status-analise">Em análise (N2)</span></td>
+                <td>01/12 · 14:22</td>
+                <td>02/12 · 10:18</td>
+                <td><span class="sla-pill sla-ok">SLA 92% · 4d</span></td>
+                <td><span class="risk-pill risk-baixo">Baixo</span></td>
+                <td>05/12 · Fim do dia</td>
+              </tr>
+              <tr>
+                <td>DM-8654</td>
+                <td>Estado X</td>
+                <td>Mensageria</td>
+                <td><span class="status-pill status-fila">Na fila N1</span></td>
+                <td>02/12 · 08:47</td>
+                <td>02/12 · 08:47</td>
+                <td><span class="sla-pill sla-ok">SLA 98% · 2d</span></td>
+                <td><span class="risk-pill risk-baixo">Baixo</span></td>
+                <td>03/12 · Manhã</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="badge-mini-row">
+            <span class="badge-mini">Status: 3 em análise · 2 em fila · 1 aguardando cliente</span>
+            <span class="badge-mini">Chamados com SLA crítico: 1 · Risco moderado de glosa</span>
+          </div>
+        </section>
+
+        <!-- COLUNA DIREITA: GRÁFICOS & RANKING -->
+        <section class="card">
+          <h2>Tempo médio & ranking de operadores</h2>
+          <div class="card-sub">
+            Comparação do tempo médio de atendimento por operador (N1/N2) e destaque do operador selecionado.
+          </div>
+          <canvas id="chartTempoOperador"></canvas>
+
+          <div class="badge-mini-row">
+            <span class="badge-mini">Média geral N1/N2: 4,1 dias</span>
+            <span class="badge-mini">Operador selecionado: 3,4 dias</span>
+            <span class="badge-mini">Meta OSM: ≤ 4,0 dias</span>
+          </div>
+
+          <hr style="border:none;border-top:1px solid #111827;margin:10px 0 8px 0;">
+
+          <h2>Distribuição de status & previsão de fechamento</h2>
+          <div class="card-sub">
+            Distribuição dos chamados por status e previsão automática de fechamento para o dia e semana.
+          </div>
+          <canvas id="chartStatus"></canvas>
+
+          <div class="badge-mini-row">
+            <span class="badge-mini">Prev. fechamento hoje: 7 chamados</span>
+            <span class="badge-mini">Prev. fechamento na semana: 26 chamados</span>
+            <span class="badge-mini">Chance de zerar chamados &gt; 30d: 82%</span>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer-note">
+        Painel por operador N1/N2 – simulação com dados fictícios. Integração real: Desk Manager + App do Conhecimento + Sala de Guerra N1/N2.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Configuração global Chart.js
+    Chart.defaults.color = '#f9fafb';
+    Chart.defaults.borderColor = '#4b5563';
+    Chart.defaults.font.family = "'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', sans-serif";
+    Chart.defaults.font.size = 12;
+    const grid = { color: '#1f2937', lineWidth: 1 };
+
+    // Gráfico de tempo médio por operador
+    const ctxTempo = document.getElementById('chartTempoOperador').getContext('2d');
+    new Chart(ctxTempo, {
+      type: 'bar',
+      data: {
+        labels: ['Thais (selecionado)', 'Carlos', 'Marina', 'João', 'Patrícia', 'Rafael'],
+        datasets: [{
+          label: 'Tempo médio de resolução (dias)',
+          data: [3.4, 4.2, 3.9, 4.5, 4.0, 4.3],
+          backgroundColor: function(ctx) {
+            const idx = ctx.dataIndex;
+            return idx === 0 ? 'rgba(34,197,94,0.88)' : 'rgba(148,163,184,0.9)';
+          },
+          borderColor: function(ctx) {
+            const idx = ctx.dataIndex;
+            return idx === 0 ? '#22ff88' : '#9ca3af';
+          },
+          borderWidth: 1.5,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: grid,
+            ticks: { font: { size: 10 } }
+          },
+          y: {
+            beginAtZero: true,
+            suggestedMax: 6,
+            grid: grid,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    });
+
+    // Gráfico de distribuição de status
+    const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+    new Chart(ctxStatus, {
+      type: 'doughnut',
+      data: {
+        labels: ['Na fila', 'Em análise', 'Aguardando cliente', 'Em homologação'],
+        datasets: [{
+          data: [4, 6, 2, 2],
+          backgroundColor: [
+            'rgba(148,163,184,0.9)',
+            'rgba(56,189,248,0.95)',
+            'rgba(250,204,21,0.95)',
+            'rgba(34,197,94,0.95)'
+          ],
+          borderColor: '#020617',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10 } }
+        },
+        cutout: '60%'
+      }
+    });
+  </script>
+</body>
+</html>
