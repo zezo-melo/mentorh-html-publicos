@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Missões Diárias Inteligentes – Sala de Guerra</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* ---------- RESET BÁSICO ---------- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #1a2a3a 0, #020617 40%, #000 100%);
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: 20px;
+    }
+
+    /* ---------- LAYOUT GERAL ---------- */
+    .war-room {
+      width: 100%;
+      max-width: 1200px;
+      height: 100%;
+      max-height: 820px;
+      background: radial-gradient(circle at top, #020617 0, #020617 40%, #000 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow:
+        0 0 30px rgba(15, 23, 42, 0.9),
+        0 0 60px rgba(34, 197, 94, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ---------- HEADER SUPERIOR ---------- */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.9);
+      background: linear-gradient(to right, #020617, #020617 50%, #020617);
+      position: relative;
+    }
+
+    .top-bar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at left, rgba(34, 197, 94, 0.18), transparent 55%);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .top-bar-left {
+      position: relative;
+      z-index: 1;
+    }
+
+    .system-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .system-subtitle {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(250, 250, 250, 0.18);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #f97373;
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .badge-live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #ef4444;
+      box-shadow: 0 0 8px #f97373;
+      animation: pulseLive 1.4s infinite;
+    }
+
+    @keyframes pulseLive {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.6); opacity: 0.4; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .top-bar-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .kpi-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .kpi-card {
+      min-width: 120px;
+      padding: 6px 10px;
+      border-radius: 9px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0.8));
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .kpi-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .kpi-value.up {
+      color: #22c55e;
+    }
+
+    .kpi-value.down {
+      color: #f97316;
+    }
+
+    .sparkline {
+      margin-top: 3px;
+      height: 6px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: linear-gradient(to right, #ef4444, #eab308, #22c55e);
+      opacity: 0.8;
+    }
+
+    /* ---------- TICKER "BOLSA DE VALORES" ---------- */
+    .ticker-wrap {
+      border-top: 1px solid rgba(30, 64, 175, 0.9);
+      border-bottom: 1px solid rgba(30, 64, 175, 0.9);
+      background: radial-gradient(circle at center, #020617 0, #000 100%);
+      overflow: hidden;
+      height: 32px;
+    }
+
+    .ticker {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      animation: tickerScroll 28s linear infinite;
+    }
+
+    @keyframes tickerScroll {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    .ticker-item {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 11px;
+      color: #e5e7eb;
+      padding: 0 24px;
+      border-right: 1px solid rgba(51, 65, 85, 0.9);
+    }
+
+    .ticker-label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .ticker-value {
+      font-weight: 600;
+    }
+
+    .ticker-value.green {
+      color: #22c55e;
+    }
+
+    .ticker-value.red {
+      color: #ef4444;
+    }
+
+    .ticker-value.yellow {
+      color: #eab308;
+    }
+
+    /* ---------- ÁREA PRINCIPAL ---------- */
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.2fr);
+      gap: 18px;
+      padding: 16px 18px 18px;
+    }
+
+    /* Coluna esquerda = Missões */
+    .missions-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title span {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .mission-board {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Cartões das missões */
+    .mission-card {
+      border-radius: 14px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96))
+        padding-box,
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.7), transparent 55%) border-box;
+      padding: 10px 12px 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mission-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 60%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .mission-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .mission-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .mission-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .mission-tag.critical {
+      border-color: rgba(248, 113, 113, 0.8);
+      color: #fecaca;
+    }
+    .mission-tag.gold {
+      border-color: rgba(251, 191, 36, 0.8);
+      color: #facc15;
+    }
+    .mission-tag.silver {
+      border-color: rgba(148, 163, 184, 0.8);
+      color: #e5e7eb;
+    }
+
+    .mission-desc {
+      position: relative;
+      z-index: 1;
+      font-size: 12px;
+      color: #cbd5f5;
+      margin-bottom: 6px;
+    }
+
+    .mission-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .mission-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #9ca3af;
+    }
+
+    .mission-badge .emoji {
+      font-size: 11px;
+    }
+
+    .mission-badge.impact {
+      border-color: rgba(34, 197, 94, 0.7);
+      color: #a7f3d0;
+    }
+
+    .mission-badge.risk {
+      border-color: rgba(248, 250, 252, 0.2);
+    }
+
+    .mission-badge.medal {
+      border-color: rgba(52, 211, 153, 0.7);
+      color: #bbf7d0;
+    }
+
+    .mission-steps {
+      position: relative;
+      z-index: 1;
+      margin-left: 16px;
+      margin-bottom: 6px;
+      padding-left: 4px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .mission-steps li + li {
+      margin-top: 2px;
+    }
+
+    .mission-footer {
+      position: relative;
+      z-index: 1;
+      font-size: 11px;
+      color: #93c5fd;
+      margin-top: 3px;
+    }
+
+    .mission-footer strong {
+      color: #e5e7eb;
+      font-weight: 600;
+    }
+
+    /* ---------- COLUNA DIREITA: MINI DASH ---------- */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .side-card {
+      border-radius: 14px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9));
+      padding: 10px 12px;
+    }
+
+    .side-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+    }
+
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .heat-cell {
+      height: 16px;
+      border-radius: 4px;
+      background: #020617;
+      border: 1px solid rgba(30, 64, 175, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .heat-cell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.9));
+      opacity: var(--level, 0.1);
+    }
+
+    .heat-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #6b7280;
+    }
+
+    .mini-chart {
+      margin-top: 4px;
+      height: 70px;
+      border-radius: 10px;
+      border: 1px solid rgba(30, 64, 175, 0.9);
+      background:
+        linear-gradient(to top, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0.9)),
+        repeating-linear-gradient(
+          to right,
+          rgba(31, 41, 55, 0.8),
+          rgba(31, 41, 55, 0.8) 1px,
+          transparent 1px,
+          transparent 20px
+        );
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mini-line {
+      position: absolute;
+      inset: 18% 0 20% 0;
+      background: linear-gradient(
+        135deg,
+        rgba(239, 68, 68, 0.8),
+        rgba(234, 179, 8, 0.9),
+        rgba(34, 197, 94, 0.95)
+      );
+      clip-path: polygon(0% 60%, 15% 70%, 30% 55%, 45% 65%, 60% 40%, 75% 45%, 90% 25%, 100% 35%);
+      filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.75));
+    }
+
+    .mini-chart-x {
+      position: absolute;
+      bottom: 4px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: #6b7280;
+    }
+
+    .mini-chart-y {
+      position: absolute;
+      top: 4px;
+      left: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 9px;
+      color: #6b7280;
+    }
+
+    .season-footer {
+      font-size: 11px;
+      color: #93c5fd;
+      margin-top: 6px;
+    }
+
+    .season-bar-wrap {
+      margin-top: 6px;
+      height: 8px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid rgba(30, 64, 175, 0.9);
+      overflow: hidden;
+    }
+
+    .season-bar {
+      height: 100%;
+      width: 68%;
+      background: linear-gradient(to right, #22c55e, #a3e635, #facc15);
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+    }
+
+    .season-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    /* ---------- RODAPÉ ---------- */
+    .bottom-bar {
+      border-top: 1px solid rgba(30, 64, 175, 0.9);
+      padding: 6px 14px;
+      font-size: 10px;
+      color: #6b7280;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(2, 6, 23, 0.96);
+    }
+
+    .bottom-bar span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bottom-bar strong {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    /* ---------- RESPONSIVO ---------- */
+    @media (max-width: 900px) {
+      .war-room {
+        max-height: none;
+        height: auto;
+      }
+
+      .main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .top-bar-right {
+        width: 100%;
+        align-items: flex-start;
+      }
+
+      .kpi-row {
+        flex-wrap: wrap;
+      }
+
+      .ticker-wrap {
+        height: 38px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="war-room">
+    <!-- HEADER SUPERIOR -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <div class="system-title">Missões Diárias Inteligentes</div>
+        <div class="system-subtitle">Núcleo de Suporte · IA + Estatística Monitorando Chamados em Tempo Real</div>
+        <div class="badge-live">
+          <span class="badge-live-dot"></span>
+          Painel em Tempo Real
+        </div>
+      </div>
+
+      <div class="top-bar-right">
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">SLA Hoje</div>
+            <div class="kpi-value up">92,4%</div>
+            <div class="sparkline"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Chamados &gt;72h</div>
+            <div class="kpi-value red">6</div>
+            <div class="sparkline"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Risco de Glosa</div>
+            <div class="kpi-value yellow">3 clientes</div>
+            <div class="sparkline"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- TICKER ESTILO BOLSA -->
+    <div class="ticker-wrap">
+      <div class="ticker">
+        <div class="ticker-item">
+          <span class="ticker-label">SLA Núcleo</span>
+          <span class="ticker-value green">+2,3 pts vs ontem</span>
+        </div>
+        <div class="ticker-item">
+          <span class="ticker-label">Backlog &gt;72h</span>
+          <span class="ticker-value red">6 chamados críticos</span>
+        </div>
+        <div class="ticker-item">
+          <span class="ticker-label">Glosa Potencial</span>
+          <span class="ticker-value yellow">R$ 18.700 em risco</span>
+        </div>
+        <div class="ticker-item">
+          <span class="ticker-label">Missões Concluídas</span>
+          <span class="ticker-value green">2 / 3 hoje</span>
+        </div>
+        <div class="ticker-item">
+          <span class="ticker-label">Season Pass</span>
+          <span class="ticker-value green">68% progresso</span>
+        </div>
+        <!-- repete para dar efeito contínuo -->
+        <div class="ticker-item">
+          <span class="ticker-label">SLA Núcleo</span>
+          <span class="ticker-value green">+2,3 pts vs ontem</span>
+        </div>
+        <div class="ticker-item">
+          <span class="ticker-label">Backlog &gt;72h</span>
+          <span class="ticker-value red">6 chamados críticos</span>
+        </div>
+        <div class="ticker-item">
+          <span class="ticker-label">Glosa Potencial</span>
+          <span class="ticker-value yellow">R$ 18.700 em risco</span>
+        </div>
+        <div class="ticker-item">
+          <span class="ticker-label">Missões Concluídas</span>
+          <span class="ticker-value green">2 / 3 hoje</span>
+        </div>
+        <div class="ticker-item">
+          <span class="ticker-label">Season Pass</span>
+          <span class="ticker-value green">68% progresso</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="main">
+      <!-- COLUNA ESQUERDA: MISSÕES -->
+      <section class="missions-panel">
+        <div class="panel-title">
+          Missões Prioritárias de Hoje
+          <span>Baseadas em tempo de atraso, impacto em SLA, risco de glosa, cliente estratégico e fila futura.</span>
+        </div>
+
+        <div class="mission-board">
+          <!-- Missão 1 -->
+          <article class="mission-card">
+            <div class="mission-top">
+              <div class="mission-title">Missão 1 · Zerar gargalo crítico</div>
+              <span class="mission-tag critical">Nível 💎 Crítico</span>
+            </div>
+
+            <div class="mission-desc">
+              Resolver todos os chamados N2 com mais de <strong>72h</strong> de atraso dos clientes
+              <strong>Alfa</strong> e <strong>Beta</strong> (nível estratégico), evitando glosas e impacto financeiro.
+            </div>
+
+            <div class="mission-meta">
+              <span class="mission-badge impact">
+                <span class="emoji">📈</span> Alto impacto em SLA
+              </span>
+              <span class="mission-badge risk">
+                <span class="emoji">⏱</span> 6 chamados &gt; 72h
+              </span>
+              <span class="mission-badge medal">
+                <span class="emoji">💎</span> +30 pts hoje
+              </span>
+            </div>
+
+            <ol class="mission-steps">
+              <li>Filtrar chamados &gt;72h de clientes Alfa/Beta no Desk Manager.</li>
+              <li>Priorizar chamados com risco de glosa ou impacto financeiro.</li>
+              <li>Resolver e registrar na base de conhecimento.</li>
+              <li>Encerrar chamados com histórico claro e agendamento de follow-up.</li>
+            </ol>
+
+            <div class="mission-footer">
+              <strong>Exercício prático:</strong> registrar 1 aprendizado da missão na base do Núcleo.
+            </div>
+          </article>
+
+          <!-- Missão 2 -->
+          <article class="mission-card">
+            <div class="mission-top">
+              <div class="mission-title">Missão 2 · Prevenir atrasos amanhã</div>
+              <span class="mission-tag gold">Nível 🥇 Prioritário</span>
+            </div>
+
+            <div class="mission-desc">
+              Reduzir pela metade os chamados que vencem até amanhã, evitando novos atrasos no próximo ciclo.
+            </div>
+
+            <div class="mission-meta">
+              <span class="mission-badge impact">
+                <span class="emoji">🛡</span> Proteção do SLA futuro
+              </span>
+              <span class="mission-badge risk">
+                <span class="emoji">📊</span> 14 chamados vencem em &lt;24h
+              </span>
+              <span class="mission-badge medal">
+                <span class="emoji">🥇</span> +20 pts hoje
+              </span>
+            </div>
+
+            <ol class="mission-steps">
+              <li>Filtrar chamados com vencimento hoje/tomorrow.</li>
+              <li>Classificar por cliente estratégico / impacto.</li>
+              <li>Encerrar pelo menos 50% dos chamados.</li>
+              <li>Atualizar prazos e próximos passos no DM.</li>
+            </ol>
+
+            <div class="mission-footer">
+              <strong>Exercício prático:</strong> comparar antes/depois no gráfico de SLA e registrar 1 melhoria.
+            </div>
+          </article>
+
+          <!-- Missão 3 -->
+          <article class="mission-card">
+            <div class="mission-top">
+              <div class="mission-title">Missão 3 · Criar conhecimento</div>
+              <span class="mission-tag silver">Nível 🥈 Evolutivo</span>
+            </div>
+
+            <div class="mission-desc">
+              Selecionar 1 chamado complexo resolvido hoje e transformá-lo em artigo da base do Núcleo.
+            </div>
+
+            <div class="mission-meta">
+              <span class="mission-badge impact">
+                <span class="emoji">📚</span> Fortalece a Universidade OSM
+              </span>
+              <span class="mission-badge medal">
+                <span class="emoji">🥈</span> +10 pts se aprovado
+              </span>
+            </div>
+
+            <ol class="mission-steps">
+              <li>Escolher um caso complexo resolvido hoje.</li>
+              <li>Documentar problema + solução + impactos.</li>
+              <li>Escrever passo a passo reutilizável.</li>
+              <li>Publicar e enviar para revisão do líder.</li>
+            </ol>
+
+            <div class="mission-footer">
+              <strong>Exercício prático:</strong> apresentar o caso em 2 minutos na próxima daily.
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- COLUNA DIREITA: MINI DASHBOARD / TEMPORADA -->
+      <aside class="side-panel">
+        <!-- Heatmap de Gargalos -->
+        <div class="side-card">
+          <div class="side-title">
+            Mapa de Calor de Gargalos
+            <span class="pill">
+              <span class="pill-dot"></span>
+              IA Monitorando
+            </span>
+          </div>
+
+          <div class="heatmap">
+            <div class="heat-cell" style="--level:0.2"></div>
+            <div class="heat-cell" style="--level:0.4"></div>
+            <div class="heat-cell" style="--level:0.9"></div>
+            <div class="heat-cell" style="--level:0.3"></div>
+            <div class="heat-cell" style="--level:0.6"></div>
+            <div class="heat-cell" style="--level:0.8"></div>
+            <div class="heat-cell" style="--level:0.5"></div>
+          </div>
+          <div class="heat-legend">
+            <span>Baixo gargalo</span>
+            <span>Alto gargalo</span>
+          </div>
+        </div>
+
+        <!-- Gráfico de SLA Futuro (mini line chart) -->
+        <div class="side-card">
+          <div class="side-title">
+            Tendência de SLA (7 dias)
+          </div>
+          <div class="mini-chart">
+            <div class="mini-line"></div>
+            <div class="mini-chart-y">
+              <span>100%</span>
+              <span>95%</span>
+              <span>90%</span>
+            </div>
+            <div class="mini-chart-x">
+              <span>D-6</span>
+              <span>D-3</span>
+              <span>Hoje</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Season Pass -->
+        <div class="side-card">
+          <div class="side-title">
+            Season Pass do Núcleo
+          </div>
+          <p class="season-footer">
+            <strong>Como isso alimenta o Season Pass:</strong>
+            cada missão concluída atualiza automaticamente a barra da temporada do Núcleo, somando pontos extras
+            e destravando benefícios para o time.
+          </p>
+
+          <div class="season-bar-wrap">
+            <div class="season-bar"></div>
+          </div>
+
+          <div class="season-label">
+            <span>Progresso da Temporada: 68%</span>
+            <span>Meta: 3/3 missões diárias</span>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- RODAPÉ -->
+    <footer class="bottom-bar">
+      <span>
+        <strong>Motor de IA:</strong> analisa chamados por atraso, impacto em SLA, risco de glosa,
+        cliente estratégico e fila futura.
+      </span>
+      <span>
+        <strong>Data de referência:</strong> Missões do dia · 12/04/2026
+      </span>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>OSM · Season Pass · Núcleo de Excelência</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg-main: #020617;
+      --border-soft: #1f2937;
+      --text-main: #f9fafb;
+      --text-soft: #94a3b8;
+      --bronze: #cd7f32;
+      --silver: #c0c0c0;
+      --gold: #facc15;
+      --diamond: #38bdf8;
+      --accent: #22c55e;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #020617 0, #020617 45%, #000 100%);
+      color: var(--text-main);
+    }
+    .page-shell {
+      max-width: 1120px;
+      margin: 18px auto;
+      padding: 18px 20px 24px 20px;
+      background: radial-gradient(circle at top, rgba(15,23,42,0.96), #020617 70%);
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,0.45);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+    }
+
+    /* HEADER */
+    .top-header {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:10px;
+    }
+    .app-logo {
+      font-size:1.05rem;
+      font-weight:600;
+    }
+    .app-sub {
+      font-size:.8rem;
+      color:var(--text-soft);
+    }
+
+    /* BOTÃO VOLTAR */
+    .back-link {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid var(--border-soft);
+      background:#020617;
+      color:var(--text-soft);
+      font-size:.76rem;
+      text-decoration:none;
+      box-shadow:0 0 0 rgba(0,0,0,0);
+      transition:all .15s ease-out;
+    }
+    .back-link:hover {
+      border-color:#4b5563;
+      box-shadow:0 4px 14px rgba(0,0,0,0.6);
+    }
+
+    .title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: .85rem;
+      color: var(--text-soft);
+      margin-bottom: 10px;
+    }
+
+    .hidden { display:none; }
+
+    /* NAV INTERNA SEASON PASS */
+    .season-nav {
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-bottom:12px;
+    }
+    .season-tab-btn {
+      border-radius:999px;
+      border:1px solid var(--border-soft);
+      background:#020617;
+      color:var(--text-soft);
+      font-size:.78rem;
+      padding:5px 12px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      box-shadow:0 0 0 rgba(0,0,0,0);
+      transition:all .15s ease-out;
+    }
+    .season-tab-btn:hover {
+      border-color:#4b5563;
+      box-shadow:0 4px 14px rgba(0,0,0,0.6);
+    }
+    .season-tab-btn.active {
+      background:linear-gradient(90deg, #047857, #16a34a);
+      color:#ecfdf5;
+      border-color:transparent;
+      box-shadow:0 6px 20px rgba(16,185,129,0.45);
+    }
+
+    /* SEASON PASS – CATÁLOGO ESTILO NETFLIX */
+    .seasons-section {
+      margin-top: 4px;
+    }
+
+    .seasons-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .seasons-subtitle {
+      font-size: .82rem;
+      color: var(--text-soft);
+      margin-bottom: 8px;
+    }
+
+    .season-row {
+      margin-bottom: 12px;
+    }
+
+    .season-row-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:4px;
+      font-size:.78rem;
+      color:var(--text-soft);
+    }
+
+    .season-row-title {
+      font-weight:600;
+      color: #e5e7eb;
+    }
+
+    .season-carousel {
+      display:flex;
+      gap:8px;
+      overflow-x:auto;
+      padding-bottom:4px;
+    }
+    .season-carousel::-webkit-scrollbar {
+      height:6px;
+    }
+    .season-carousel::-webkit-scrollbar-thumb {
+      background:#111827;
+      border-radius:999px;
+    }
+
+    .season-card {
+      min-width:190px;
+      max-width:190px;
+      border-radius:16px;
+      background: radial-gradient(circle at top, #0f172a, #020617 80%);
+      border:1px solid var(--border-soft);
+      box-shadow:0 14px 32px rgba(0,0,0,0.75);
+      padding:8px 9px;
+      font-size:.76rem;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .season-tag-year {
+      font-size:.7rem;
+      color:var(--text-soft);
+    }
+
+    .season-title {
+      font-weight:600;
+      font-size:.8rem;
+    }
+
+    .season-status {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-size:.7rem;
+      color:var(--text-soft);
+    }
+
+    .season-dot {
+      width:8px;
+      height:8px;
+      border-radius:999px;
+    }
+    .season-dot.done { background:#22c55e; }
+    .season-dot.progress { background:#eab308; }
+    .season-dot.locked { background:#4b5563; }
+
+    .season-progress-bar {
+      width:100%;
+      height:6px;
+      border-radius:999px;
+      background:#020617;
+      border:1px solid #1f2937;
+      overflow:hidden;
+    }
+    .season-progress-fill {
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, #22c55e, #4ade80);
+    }
+
+    .season-badge {
+      margin-top:2px;
+      padding:3px 6px;
+      border-radius:999px;
+      border:1px solid rgba(56,189,248,0.7);
+      background:rgba(15,23,42,0.9);
+      font-size:.7rem;
+      color:#e0f2fe;
+      display:flex;
+      align-items:center;
+      gap:4px;
+    }
+
+    .season-badge span.emoji {
+      font-size:.9rem;
+    }
+
+    /* CARDS GERAIS (MÓDULOS, EXERCÍCIOS, BOSS) */
+    .gami-card {
+      border-radius:14px;
+      border:1px solid var(--border-soft);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.95), #020617 80%);
+      padding:9px 10px 10px 10px;
+      font-size:.78rem;
+      box-shadow:0 14px 30px rgba(0,0,0,0.65);
+      margin-bottom:10px;
+    }
+    .gami-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:4px;
+    }
+    .gami-title {
+      font-weight:600;
+      font-size:.8rem;
+    }
+    .gami-tag {
+      font-size:.7rem;
+      color:var(--text-soft);
+      border-radius:999px;
+      padding:1px 8px;
+      border:1px solid rgba(148,163,184,0.6);
+    }
+    .gami-body {
+      color:var(--text-soft);
+    }
+    .gami-body strong {
+      color:#e5e7eb;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: .7rem;
+      color: var(--text-soft);
+      text-align: right;
+    }
+
+    @media (max-width:600px){
+      .top-header {
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .season-nav{
+        width:100%;
+      }
+      .season-tab-btn{
+        flex:1;
+        justify-content:center;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page-shell">
+
+  <!-- HEADER -->
+  <header class="top-header">
+    <div>
+      <div class="app-logo">OSM · Season Pass · Núcleo de Excelência</div>
+      <div class="app-sub">Temporadas anuais por núcleo, com módulos práticos, exercícios, questões e boss final.</div>
+    </div>
+
+    <!-- Botão para voltar à página de Núcleos & Trilhas -->
+    <a class="back-link" href="OSM_Nucleos_Trilhas.html">
+      ⬅ Voltar para Núcleos & Trilhas
+    </a>
+  </header>
+
+  <div class="title">Season Pass · Jornada anual por Núcleo</div>
+  <div class="subtitle">
+    Ao conquistar 🥇 em todas as trilhas do Núcleo e concluir os módulos da temporada, o colaborador recebe o Selo <strong>Guardião do Núcleo 2026</strong>, exibido no currículo inteligente.
+  </div>
+
+  <!-- NAV INTERNA DO SEASON PASS -->
+  <nav class="season-nav">
+    <button class="season-tab-btn active" onclick="switchSeasonTab('catalogo', this)">🎬 Catálogo Season Pass</button>
+    <button class="season-tab-btn" onclick="switchSeasonTab('conteudo', this)">📘 Módulos práticos</button>
+    <button class="season-tab-btn" onclick="switchSeasonTab('exercicios', this)">📝 Exercícios & questões</button>
+    <button class="season-tab-btn" onclick="switchSeasonTab('boss', this)">👑 Boss final</button>
+  </nav>
+
+  <!-- ABA 1 – CATÁLOGO -->
+  <section id="season-catalogo">
+    <section class="seasons-section">
+      <div class="seasons-title">🎬 Catálogo da Temporada 2026</div>
+      <div class="seasons-subtitle">
+        Cada cartão representa um Núcleo na temporada atual. O progresso é calculado a partir das trilhas (medalhas) e dos módulos concluídos.
+      </div>
+
+      <div class="season-row">
+        <div class="season-row-header">
+          <div class="season-row-title">Temporada 2026 · Núcleos chave</div>
+          <div>Progresso por Núcleo</div>
+        </div>
+
+        <div class="season-carousel">
+
+          <!-- Núcleo Folha – Concluído -->
+          <article class="season-card">
+            <div class="season-tag-year">Núcleo 9 · Folha, Rescisão & Obrigações</div>
+            <div class="season-title">Guardião da Folha 2026</div>
+
+            <div class="season-status">
+              <span>Status: Concluída</span>
+              <span class="season-dot done"></span>
+            </div>
+
+            <div class="season-progress-bar">
+              <div class="season-progress-fill" style="width:100%;"></div>
+            </div>
+
+            <div class="season-badge">
+              <span class="emoji">💎</span>
+              <span>Selo anual desbloqueado</span>
+            </div>
+          </article>
+
+          <!-- Núcleo Desenvolvimento & Desempenho – Em progresso -->
+          <article class="season-card">
+            <div class="season-tag-year">Núcleo 3 · Desenv. & Desempenho</div>
+            <div class="season-title">Temporada 2026</div>
+
+            <div class="season-status">
+              <span>Status: Em progresso</span>
+              <span class="season-dot progress"></span>
+            </div>
+
+            <div class="season-progress-bar">
+              <div class="season-progress-fill" style="width:75%;"></div>
+            </div>
+
+            <div class="season-badge">
+              <span class="emoji">🥇</span>
+              <span>Falta 1 trilha para 🥇 em todas</span>
+            </div>
+          </article>
+
+          <!-- Núcleo Integrações – Bloqueado -->
+          <article class="season-card">
+            <div class="season-tag-year">Núcleo 7 · Integrações & eSocial</div>
+            <div class="season-title">Temporada 2026</div>
+
+            <div class="season-status">
+              <span>Status: Bloqueada</span>
+              <span class="season-dot locked"></span>
+            </div>
+
+            <div class="season-progress-bar">
+              <div class="season-progress-fill" style="width:0%;"></div>
+            </div>
+
+            <div class="season-badge">
+              <span class="emoji">🔒</span>
+              <span>É preciso 🥈 em todas as trilhas para iniciar</span>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <!-- ABA 2 – CONTEÚDOS & MÓDULOS -->
+  <section id="season-conteudo" class="hidden">
+    <div class="seasons-title">📘 Módulos práticos da temporada</div>
+    <div class="seasons-subtitle">
+      Cada temporada é dividida em módulos práticos. Para o Núcleo escolhido, todos os módulos abaixo devem ser concluídos.
+    </div>
+
+    <!-- Módulo 1 -->
+    <article class="gami-card">
+      <div class="gami-header">
+        <div class="gami-title">Módulo 1 — Domínio operacional do Núcleo</div>
+        <div class="gami-tag">Obrigatório</div>
+      </div>
+      <div class="gami-body">
+        <strong>Objetivo:</strong> garantir 🥇 em todas as trilhas do Núcleo.<br><br>
+        <strong>Atividades práticas:</strong>
+        <ul>
+          <li>Revisar todas as trilhas e conteúdos do Núcleo no currículo inteligente</li>
+          <li>Assistir microvídeos (3–5 minutos) sobre rotinas críticas</li>
+          <li>Ler checklist de “erros mais comuns” e como evitá-los</li>
+        </ul>
+        <strong>Critério de conclusão:</strong> todas as trilhas do Núcleo com medalha 🥇 ou 💎.
+      </div>
+    </article>
+
+    <!-- Módulo 2 -->
+    <article class="gami-card">
+      <div class="gami-header">
+        <div class="gami-title">Módulo 2 — Simulações guiadas</div>
+        <div class="gami-tag">Obrigatório</div>
+      </div>
+      <div class="gami-body">
+        <strong>Objetivo:</strong> testar o uso do sistema em cenários realistas.<br><br>
+        <strong>Simulações sugeridas:</strong>
+        <ul>
+          <li>Ajuste de jornada com impacto em folha e frequência</li>
+          <li>Correção de afastamento incorreto integrado ao eSocial</li>
+          <li>Revisão de dados funcionais com impacto em rescisão</li>
+        </ul>
+        Cada simulação gera um mini-relatório que pode ser revisado pelo líder ou especialista.
+      </div>
+    </article>
+
+    <!-- Módulo 3 -->
+    <article class="gami-card">
+      <div class="gami-header">
+        <div class="gami-title">Módulo 3 — Caso prático com base em cliente real</div>
+        <div class="gami-tag">Aplicação</div>
+      </div>
+      <div class="gami-body">
+        <strong>Objetivo:</strong> aplicar o conhecimento do Núcleo em um caso concreto de cliente.<br><br>
+        <strong>Passos sugeridos:</strong>
+        <ol>
+          <li>Escolher um caso real recente envolvendo o Núcleo</li>
+          <li>Descrever o problema identificado</li>
+          <li>Aplicar as regras do sistema e da legislação</li>
+          <li>Registrar a solução adotada e o impacto no cliente</li>
+        </ol>
+        <strong>Resultado:</strong> esse relatório passa a compor o portfólio de casos do colaborador.
+      </div>
+    </article>
+  </section>
+
+  <!-- ABA 3 – EXERCÍCIOS & QUESTÕES -->
+  <section id="season-exercicios" class="hidden">
+    <div class="seasons-title">📝 Exercícios & questões da temporada</div>
+    <div class="seasons-subtitle">
+      A avaliação combina questões objetivas com exercícios práticos ligados ao dia a dia do Núcleo.
+    </div>
+
+    <!-- Quiz -->
+    <article class="gami-card">
+      <div class="gami-header">
+        <div class="gami-title">Quiz objetivo — 10 questões</div>
+        <div class="gami-tag">Avaliação teórica</div>
+      </div>
+      <div class="gami-body">
+        <strong>Exemplo de questão 1:</strong><br>
+        <em>Ao alterar o turno de um servidor de 8h para 12x36, quais núcleos são diretamente impactados?</em>
+        <ul>
+          <li>A) Apenas folha de pagamento</li>
+          <li>B) Jornada & Registro Funcional, Frequência e Folha</li>
+          <li>C) Somente dados funcionais</li>
+        </ul>
+        <br>
+        <strong>Exemplo de questão 2:</strong><br>
+        <em>Uma rescisão CLT com aviso prévio indenizado deve ser tratada em qual combinação de trilhas?</em>
+        <ul>
+          <li>A) Folha de pagamento + Tabelas salariais</li>
+          <li>B) Rescisão CLT + eSocial + Tabelas financeiras</li>
+          <li>C) Frequência + Convocações</li>
+        </ul>
+        <p style="margin-top:8px;">
+          As questões podem ser carregadas do banco de dados da Universidade Corporativa OSM, mas aqui já ficam exemplificadas para o desenho da tela.
+        </p>
+      </div>
+    </article>
+
+    <!-- Exercício guiado -->
+    <article class="gami-card">
+      <div class="gami-header">
+        <div class="gami-title">Exercício guiado — Passo a passo operacional</div>
+        <div class="gami-tag">Prático</div>
+      </div>
+      <div class="gami-body">
+        <strong>Cenário:</strong> afastamento de servidor registrado com data incorreta impactando folha e eSocial.<br><br>
+        <strong>Passos sugeridos:</strong>
+        <ol>
+          <li>Abrir o cadastro do servidor no Núcleo de Registro Funcional</li>
+          <li>Corrigir a data do afastamento e o tipo de evento</li>
+          <li>Revisar o espelho da folha e recalcular o mês afetado</li>
+          <li>Gerar novamente os eventos do eSocial e analisar os retornos</li>
+          <li>Registrar, em campo apropriado, o resumo da correção realizada</li>
+        </ol>
+        <p>Esse exercício pode ser acompanhado pelo líder ou registrado como evidência na temporada.</p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ABA 4 – BOSS FINAL -->
+  <section id="season-boss" class="hidden">
+    <div class="seasons-title">👑 Boss Final — Caso integrado da temporada</div>
+    <div class="seasons-subtitle">
+      O Boss Final representa um caso complexo que exige visão sistêmica do Núcleo e das integrações (folha, jornada, eSocial, etc.).
+    </div>
+
+    <article class="gami-card">
+      <div class="gami-header">
+        <div class="gami-title">Boss Final — Caso completo</div>
+        <div class="gami-tag">Obrigatório para 💎</div>
+      </div>
+
+      <div class="gami-body">
+        <strong>Cenário:</strong><br>
+        Um servidor:
+        <ul>
+          <li>Retornou de afastamento médico prolongado</li>
+          <li>Possui adicional de insalubridade variável</li>
+          <li>Está em regime de teletrabalho parcial</li>
+          <li>Teve uma promoção retroativa aplicada em folha</li>
+        </ul>
+
+        <strong>Tarefas do Boss:</strong>
+        <ol>
+          <li>Revisar dados funcionais e histórico de afastamentos</li>
+          <li>Recalcular tempo de serviço impactado</li>
+          <li>Ajustar a folha com os novos parâmetros (insalubridade + promoção)</li>
+          <li>Validar todos os eventos gerados no eSocial e corrigir inconsistências</li>
+          <li>Produzir relatório técnico explicando cada decisão tomada</li>
+        </ol>
+
+        <strong>Critério de aprovação:</strong><br>
+        ✔ Todas as etapas concluídas com coerência técnica e sem pendências de integração.<br>
+        ✔ A temporada do Núcleo vai para 100% e o colaborador recebe a medalha 💎 e o Selo <em>Guardião do Núcleo 2026</em>.
+      </div>
+    </article>
+  </section>
+
+  <div class="footer-note">
+    Season Pass – jornada anual prática e gamificada para consolidar a excelência por Núcleo.
+  </div>
+</div>
+
+<script>
+  function switchSeasonTab(tabId, btn) {
+    const sections = ['catalogo','conteudo','exercicios','boss'];
+    sections.forEach(id => {
+      const el = document.getElementById('season-' + id);
+      if (el) el.classList.add('hidden');
+    });
+    const active = document.getElementById('season-' + tabId);
+    if (active) active.classList.remove('hidden');
+
+    document.querySelectorAll('.season-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
