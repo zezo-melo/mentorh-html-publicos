@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>OSM · Trilha Duolingo + Quiz – Núcleo Convocados</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg-main: #020617;
+      --bg-card: #020617;
+      --bg-soft: #0b1220;
+      --border-soft: #1e293b;
+      --text-main: #f9fafb;
+      --text-soft: #9ca3af;
+      --accent: #22c55e;
+      --accent-soft: #4ade80;
+      --bronze: #cd7f32;
+      --silver: #c0c0c0;
+      --gold: #facc15;
+      --diamond: #38bdf8;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #020617 0, #020617 45%, #000 100%);
+      color: var(--text-main);
+    }
+    .page {
+      max-width: 1160px;
+      margin: 18px auto;
+      padding: 20px 22px 24px;
+      background: radial-gradient(circle at top, rgba(15,23,42,0.96), #020617 70%);
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,0.45);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.35rem;
+      letter-spacing: .04em;
+    }
+    .subtitle {
+      font-size: .85rem;
+      color: var(--text-soft);
+      margin-bottom: 14px;
+      max-width: 980px;
+    }
+
+    .top-summary {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:12px;
+      font-size:.8rem;
+    }
+    .chip {
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.55);
+      background:rgba(15,23,42,0.95);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .chip span.label {
+      color:var(--text-soft);
+    }
+    .chip span.value {
+      font-weight:600;
+      color:var(--accent-soft);
+    }
+
+    .layout {
+      display:grid;
+      grid-template-columns:minmax(0, 2fr) minmax(0, 1.15fr);
+      gap:14px;
+    }
+
+    .card {
+      background:var(--bg-card);
+      border-radius:18px;
+      border:1px solid var(--border-soft);
+      padding:10px 12px;
+      box-shadow:0 18px 40px rgba(0,0,0,0.7);
+    }
+
+    .trilha-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      margin-bottom:6px;
+      font-size:.8rem;
+    }
+    .trilha-header-title {
+      font-weight:600;
+    }
+    .trilha-header-sub {
+      font-size:.76rem;
+      color:var(--text-soft);
+    }
+
+    .duo-layout {
+      display:flex;
+      gap:12px;
+      margin-top:4px;
+    }
+    .duo-path {
+      flex:1;
+      position:relative;
+      padding-left:38px;
+    }
+    .duo-rail {
+      position:absolute;
+      top:0;
+      bottom:0;
+      left:17px;
+      width:4px;
+      background:linear-gradient(#1f2937, #0f172a);
+      border-radius:999px;
+    }
+
+    .tier-block {
+      margin-bottom:18px;
+      position:relative;
+    }
+    .tier-heading {
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      margin-bottom:6px;
+      font-size:.8rem;
+    }
+    .medal-pill {
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border-soft);
+      background:#020617;
+      font-size:.75rem;
+      flex-shrink:0;
+    }
+    .medal-pill span.icon {
+      font-size:1.1rem;
+    }
+    .medal-pill.bronze  { border-color:var(--bronze);  box-shadow:0 0 8px rgba(205,127,50,0.6);}
+    .medal-pill.silver  { border-color:var(--silver);  box-shadow:0 0 8px rgba(192,192,192,0.6);}
+    .medal-pill.gold    { border-color:var(--gold);    box-shadow:0 0 8px rgba(250,204,21,0.6);}
+    .medal-pill.diamond { border-color:var(--diamond); box-shadow:0 0 8px rgba(56,189,248,0.6);}
+
+    .tier-desc {
+      font-size:.75rem;
+      color:var(--text-soft);
+      margin-top:2px;
+    }
+    .tier-lock {
+      font-size:.72rem;
+      color:var(--text-soft);
+      display:flex;
+      align-items:center;
+      gap:4px;
+      margin-top:2px;
+    }
+
+    .bau {
+      position:absolute;
+      right:0;
+      top:2px;
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      border:1px solid #111827;
+      background:radial-gradient(circle at 30% 20%, #020617, #020617 70%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.6rem;
+      box-shadow:0 12px 26px rgba(0,0,0,0.9);
+    }
+    .bau.locked {
+      opacity:.35;
+    }
+    .bau.open {
+      border-color:var(--accent);
+      box-shadow:0 0 0 2px rgba(34,197,94,0.7), 0 14px 30px rgba(0,0,0,1);
+    }
+
+    .percurso {
+      position:relative;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    .percurso-node {
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      background:#020617;
+      border:2px solid #1f2937;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:.9rem;
+      box-shadow:0 8px 18px rgba(0,0,0,0.8);
+      flex-shrink:0;
+      position:relative;
+      z-index:1;
+    }
+    .percurso-node.completed {
+      background:radial-gradient(circle at 30% 20%, #22c55e, #14532d 70%);
+      border-color:#22c55e;
+      color:#f9fafb;
+      box-shadow:0 0 0 2px rgba(34,197,94,0.7),0 10px 22px rgba(0,0,0,0.9);
+    }
+    .percurso-node.locked {
+      opacity:.3;
+      box-shadow:none;
+    }
+
+    .percurso-line {
+      position:absolute;
+      left:32px;
+      right:6px;
+      top:17px;
+      height:2px;
+      background:linear-gradient(90deg, rgba(55,65,81,0.9), rgba(55,65,81,0.1));
+      z-index:0;
+    }
+
+    .percurso-card {
+      flex:1;
+      border-radius:12px;
+      border:1px solid #111827;
+      background:#020617;
+      padding:6px 8px;
+      font-size:.74rem;
+    }
+    .percurso-title {
+      font-weight:600;
+      margin-bottom:2px;
+    }
+    .percurso-detail {
+      color:var(--text-soft);
+      margin-bottom:4px;
+    }
+    .percurso-meta {
+      font-size:.7rem;
+      color:var(--text-soft);
+      margin-bottom:4px;
+    }
+    .percurso-actions {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+    .status-label {
+      font-size:.7rem;
+      color:var(--text-soft);
+    }
+    .status-label.ok {
+      color:var(--accent-soft);
+      font-weight:600;
+    }
+    button {
+      border:none;
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:.72rem;
+      cursor:pointer;
+      background:linear-gradient(135deg, #16a34a, #4ade80);
+      color:#022c22;
+      font-weight:600;
+      box-shadow:0 8px 18px rgba(22,163,74,0.6);
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+    button:disabled {
+      opacity:.35;
+      cursor:default;
+      box-shadow:none;
+    }
+    button.secondary {
+      background:#020617;
+      color:var(--text-soft);
+      border:1px solid #1f2937;
+      box-shadow:none;
+      font-weight:500;
+    }
+
+    .side-title {
+      font-size:.8rem;
+      font-weight:600;
+      margin-bottom:6px;
+    }
+    .emblema-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+      gap:6px;
+      margin-bottom:8px;
+    }
+    .emblema-card {
+      border-radius:14px;
+      border:1px solid var(--border-soft);
+      background:radial-gradient(circle at top, #020617, #020617 70%);
+      padding:6px 7px;
+      font-size:.72rem;
+      display:flex;
+      align-items:flex-start;
+      gap:6px;
+    }
+    .emblema-icon {
+      width:26px;
+      height:26px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.2rem;
+      box-shadow:0 0 10px rgba(0,0,0,0.9);
+      flex-shrink:0;
+    }
+    .emblema-icon.bronze { background:#451a03; }
+    .emblema-icon.silver { background:#020617; border:1px solid var(--silver); }
+    .emblema-icon.gold { background:#422006; }
+    .emblema-icon.diamond { background:#082f49; }
+
+    .emblema-text-title {
+      font-weight:600;
+      margin-bottom:2px;
+    }
+    .emblema-text-title.bronze { color:var(--bronze); }
+    .emblema-text-title.silver { color:var(--silver); }
+    .emblema-text-title.gold { color:var(--gold); }
+    .emblema-text-title.diamond { color:var(--diamond); }
+
+    .emblema-text-desc {
+      color:var(--text-soft);
+    }
+
+    .side-note {
+      font-size:.72rem;
+      color:var(--text-soft);
+      border-top:1px dashed var(--border-soft);
+      padding-top:6px;
+      margin-top:4px;
+    }
+
+    .footer-note {
+      margin-top:12px;
+      font-size:.7rem;
+      color:var(--text-soft);
+      text-align:right;
+    }
+
+    /* MODAL DE QUIZ (estilo H5P simplificado) */
+    .quiz-modal {
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+    }
+    .quiz-modal.active {
+      display:flex;
+    }
+    .quiz-backdrop {
+      position:absolute;
+      inset:0;
+      background:rgba(15,23,42,0.85);
+      backdrop-filter:blur(4px);
+    }
+    .quiz-panel {
+      position:relative;
+      max-width:720px;
+      width:92%;
+      background:#020617;
+      border-radius:18px;
+      border:1px solid #1e293b;
+      padding:14px 16px 12px;
+      box-shadow:0 24px 60px rgba(0,0,0,0.95);
+      z-index:10;
+    }
+    .quiz-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .quiz-title {
+      font-size:.9rem;
+      font-weight:600;
+    }
+    .quiz-subtitle {
+      font-size:.75rem;
+      color:var(--text-soft);
+      margin-top:2px;
+    }
+    .quiz-close {
+      border:none;
+      background:transparent;
+      color:var(--text-soft);
+      font-size:1rem;
+      cursor:pointer;
+    }
+    .quiz-progress {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      font-size:.74rem;
+      margin-bottom:6px;
+    }
+    .quiz-bar {
+      flex:1;
+      height:6px;
+      border-radius:999px;
+      background:#020617;
+      border:1px solid #1f2937;
+      overflow:hidden;
+    }
+    .quiz-bar-fill {
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#22c55e,#4ade80);
+      transition:width .15s ease-out;
+    }
+    .quiz-question {
+      font-size:.85rem;
+      margin-bottom:8px;
+    }
+    .quiz-options {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom:8px;
+    }
+    .quiz-option {
+      border-radius:12px;
+      border:1px solid #1f2937;
+      background:#020617;
+      padding:6px 8px;
+      font-size:.8rem;
+      cursor:pointer;
+      display:flex;
+      gap:6px;
+      align-items:flex-start;
+    }
+    .quiz-option-index {
+      width:20px;
+      height:20px;
+      border-radius:999px;
+      border:1px solid #4b5563;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:.7rem;
+      flex-shrink:0;
+      margin-top:2px;
+    }
+    .quiz-option-text {
+      flex:1;
+    }
+    .quiz-option.selected {
+      border-color:#22c55e;
+      box-shadow:0 0 0 1px rgba(34,197,94,0.6);
+      background:#022c22;
+    }
+    .quiz-footer {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:6px;
+      font-size:.72rem;
+    }
+    .quiz-feedback {
+      color:var(--text-soft);
+    }
+    .quiz-feedback.ok {
+      color:var(--accent-soft);
+    }
+    .quiz-feedback.bad {
+      color:#f97373;
+    }
+    .quiz-actions {
+      display:flex;
+      gap:6px;
+    }
+
+    @media (max-width:880px) {
+      .layout {
+        grid-template-columns:1fr;
+      }
+      .duo-layout {
+        flex-direction:column;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1>Núcleo Convocados – Trilha estilo Duolingo + Quiz</h1>
+  <div class="subtitle">
+    Cada percurso representa um desafio com 10 perguntas. Atingindo pelo menos 80% de acerto,
+    o baú libera a medalha da fase (Bronze, Prata, Ouro, Diamante) e o sistema registra um
+    emblema de competência (modelo Moodle). O resultado final será integrado à Gestão do
+    Conhecimento e ao currículo inteligente.
+  </div>
+
+  <div class="top-summary">
+    <div class="chip">
+      <span class="label">Núcleo</span>
+      <span class="value">Convocações</span>
+    </div>
+    <div class="chip">
+      <span class="label">XP total</span>
+      <span class="value" data-xp-total>0</span>
+    </div>
+    <div class="chip">
+      <span class="label">Emblemas conquistados</span>
+      <span class="value" data-emblemas-total>0</span>
+    </div>
+    <div class="chip">
+      <span class="label">Medalha máxima liberada</span>
+      <span class="value" data-medal-max>—</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- ESQUERDA – TRILHA -->
+    <section class="card">
+      <div class="trilha-header">
+        <div>
+          <div class="trilha-header-title">Trilha de desenvolvimento – Convocações</div>
+          <div class="trilha-header-sub">
+            Caminho completo da medalha Bronze até a Diamante, validando competências com testes, jogos e atividades.
+          </div>
+        </div>
+      </div>
+
+      <div class="duo-layout">
+        <div class="duo-path" id="duoPath">
+          <div class="duo-rail"></div>
+          <!-- Tiers gerados via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- DIREITA – EMBLEMAS / RESUMO -->
+    <section class="card">
+      <div class="side-title">Emblemas Moodle conquistados nesta trilha</div>
+      <div class="emblema-grid" id="emblemaGrid"></div>
+      <div class="side-note">
+        Cada percurso concluído libera um emblema específico (Bronze, Prata, Ouro ou Diamante) no
+        ambiente de aprendizagem. A combinação de XP + medalhas será usada para atualizar o ranking,
+        a pontuação do núcleo e o cargo sugerido na jornada de carreira.
+      </div>
+    </section>
+  </div>
+
+  <div class="footer-note">
+    Protótipo conceitual – a lógica de 80% de acerto poderá ser alimentada com os resultados reais do Duolingo / questionários integrados.
+  </div>
+</div>
+
+<!-- MODAL DE QUIZ -->
+<div class="quiz-modal" id="quizModal">
+  <div class="quiz-backdrop"></div>
+  <div class="quiz-panel">
+    <div class="quiz-header">
+      <div>
+        <div class="quiz-title" data-quiz-title>Desafio</div>
+        <div class="quiz-subtitle" data-quiz-subtitle></div>
+      </div>
+      <button class="quiz-close" id="quizCloseBtn" title="Fechar">✕</button>
+    </div>
+
+    <div class="quiz-progress">
+      <div class="quiz-bar">
+        <div class="quiz-bar-fill" id="quizBarFill"></div>
+      </div>
+      <div data-quiz-counter>Pergunta 1/10</div>
+    </div>
+
+    <div class="quiz-question" data-quiz-question>
+      <!-- enunciado -->
+    </div>
+
+    <div class="quiz-options" id="quizOptions">
+      <!-- opções -->
+    </div>
+
+    <div class="quiz-footer">
+      <div class="quiz-feedback" id="quizFeedback"></div>
+      <div class="quiz-actions">
+        <button class="secondary" id="quizCancelBtn">Cancelar</button>
+        <button id="quizConfirmBtn" disabled>Confirmar resposta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASS_PERCENT = 0.8;
+const medalEmoji = { bronze:"🥉", silver:"🥈", gold:"🥇", diamond:"💎" };
+const medalName = { bronze:"Bronze", silver:"Prata", gold:"Ouro", diamond:"Diamante" };
+
+const trilhaConvocacoes = {
+  tiers: [
+    {
+      id:"bronze",
+      medal:"bronze",
+      descricaoNivel:
+        "O colaborador neste nível possui entendimento inicial sobre o módulo de Convocações e executa tarefas simples com base em orientações. Tem familiaridade com as telas e fluxos principais, mas depende de apoio para situações não rotineiras.",
+      percursos:[
+        {
+          id:"b1",
+          titulo:"Percurso 1 – Estrutura das tabelas básicas",
+          descricao:"Estrutura e utilização das tabelas básicas do módulo.",
+          xp:20,
+          questions:[
+            {q:"Qual é o objetivo principal das tabelas básicas de convocações?", a:["Padronizar códigos e parâmetros usados nas convocações","Registrar apenas dados históricos do órgão","Substituir o cadastro de servidores","Calcular automaticamente a folha"], c:0},
+            {q:"Um exemplo típico de informação mantida em tabela básica é:", a:["CPF do servidor","Tipo de convocação e sua descrição","Justificativa individual do servidor","Número do processo administrativo"], c:1},
+            {q:"Ao criar um novo tipo de convocação, a boa prática é:", a:["Criar diretamente em produção sem testes","Reutilizar um código existente para evitar inclusão","Cadastrar em ambiente de homologação, testar e só então levar para produção","Criar vários tipos quase iguais para cobrir qualquer situação"], c:2},
+            {q:"A falta de padronização nas tabelas básicas costuma gerar:", a:["Maior desempenho do sistema","Ambiguidade de lançamentos e dificuldade de análise","Redução de chamados de suporte","Melhor experiência do usuário"], c:1},
+            {q:"Quem deve autorizar alterações estruturais em tabelas básicas?", a:["Qualquer usuário com acesso ao módulo","Somente o suporte técnico externo","Gestor responsável pelo módulo, seguindo fluxo de governança","Apenas o setor financeiro"], c:2},
+            {q:"Antes de excluir um código de tabela básica é fundamental:", a:["Apenas ocultá-lo visualmente","Verificar se não existe uso histórico ou integrações dependentes","Excluir também todos os registros antigos","Reiniciar o servidor"], c:1},
+            {q:"Tabelas básicas bem configuradas contribuem para:", a:["Aumento de retrabalho","Coerência de relatórios e indicadores","Despadronização de processos","Maior número de exceções manuais"], c:1},
+            {q:"Para registrar uma nova regra de negócio associada a tipo de convocação, o ideal é:", a:["Documentar a regra e vinculá-la ao código correspondente","Criar códigos diferentes com a mesma descrição","Alterar a regra sem registrar em lugar nenhum","Manter somente em e-mails da equipe"], c:0},
+            {q:"Quando vários órgãos usam o mesmo sistema, as tabelas básicas devem:", a:["Ser totalmente livres, sem padrão comum","Seguir um modelo referência com espaço para customizações controladas","Ser diferentes para cada usuário","Ser editadas apenas pelo fornecedor"], c:1},
+            {q:"Um sintoma de tabela básica mal administrada é:", a:["Baixa taxa de chamados","Facilidade de treinamento","Listas extensas com códigos redundantes e pouco claros","Aderência total às regras legais"], c:2}
+          ]
+        },
+        {
+          id:"b2",
+          titulo:"Percurso 2 – Minutas de convocação",
+          descricao:"Manutenção das minutas de convocação, incluindo ajustes e atualizações simples.",
+          xp:20,
+          questions:[
+            {q:"A minuta de convocação é:", a:["Um relatório apenas visual","O texto padrão usado como base para gerar as convocações","Um campo exclusivo do setor jurídico","Um anexo opcional que não impacta o processo"], c:1},
+            {q:"Ao ajustar uma minuta, a preocupação principal deve ser:", a:["Manter a linguagem alinhada às regras legais e ao processo real","Usar o maior número possível de termos técnicos","Excluir campos variáveis para simplificar","Personalizar apenas para um servidor específico"], c:0},
+            {q:"Campos variáveis em minutas (placeholders) servem para:", a:["Inserir dados automaticamente, como nome e data","Impedir edição manual","Ocultar informações sensíveis","Gerar números aleatórios"], c:0},
+            {q:"Quando uma lei muda e altera o texto padrão, a ação correta é:", a:["Manter o texto antigo para evitar retrabalho","Atualizar a minuta, registrar a versão e comunicar as áreas impactadas","Criar uma segunda minuta sem desativar a anterior","Aguardar alguém reclamar para mudar"], c:1},
+            {q:"Minutas duplicadas com textos ligeiramente diferentes tendem a:", a:["Melhorar a governança","Confundir usuários e gerar erros","Ser ignoradas pelo sistema","Acelerar o processo"], c:1},
+            {q:"Quem deve validar alterações significativas em minutas?", a:["Apenas o desenvolvedor","Um gestor de negócio ou jurídico responsável","Qualquer servidor","Somente o fornecedor do sistema"], c:1},
+            {q:"É recomendável registrar em algum lugar:", a:["O histórico de versões das minutas","Somente a versão mais recente","Apenas as minutas excluídas","Nenhuma alteração"], c:0},
+            {q:"Para testes, ao alterar minutas é boa prática:", a:["Aplicar direto em casos reais de grande impacto","Utilizar ambiente de homologação com casos simulados","Não comunicar ninguém","Desativar o módulo temporariamente"], c:1},
+            {q:"Um erro comum em minutas é:", a:["Uso de variáveis claras","Textos alinhados à legislação","Informações contraditórias com o fluxo de convocação","Padronização de cabeçalhos"], c:2},
+            {q:"Minutas bem estruturadas contribuem para:", a:["Redução de contestações e retrabalho","Aumento de glosas","Mais erros de digitação","Desalinhamento com a legislação"], c:0}
+          ]
+        },
+        {
+          id:"b3",
+          titulo:"Percurso 3 – Tipos de convocação",
+          descricao:"Compreensão geral dos tipos de convocação e suas finalidades.",
+          xp:20,
+          questions:[
+            {q:"Conhecer os tipos de convocação é importante para:", a:["Escolher qualquer tipo sem critério","Aplicar o tipo correto em cada cenário e gerar indicadores confiáveis","Evitar o uso do módulo","Substituir controles legais"], c:1},
+            {q:"Um exemplo de tipo de convocação pode ser:", a:["Convocação para prova oral","Número do CPF","Cálculo de férias","Cadastro de dependentes"], c:0},
+            {q:"Quando o usuário usa tipo incorreto de convocação, o risco é:", a:["Relatórios distorcidos e possíveis falhas legais","Melhora de performance","Apenas mudança visual","Nenhum impacto"], c:0},
+            {q:"A criação de novos tipos deve considerar:", a:["Regra de negócio, impacto legal e necessidade real","Somente preferências pessoais","Apenas o layout da tela","Qualquer sugestão sem análise"], c:0},
+            {q:"Tipos raramente usados devem:", a:["Permanecer ativos sem análise","Ser avaliados para possível desativação ou agrupamento","Ser duplicados","Ser renomeados sem critério"], c:1},
+            {q:"Para treinamento, é útil relacionar tipos de convocação com:", a:["Casos práticos do órgão","Temas aleatórios","Somente teoria jurídica","Apenas fluxogramas genéricos"], c:0},
+            {q:"A documentação dos tipos de convocação deve incluir:", a:["Descrição, quando usar, exemplos e responsáveis pela regra","Somente o código numérico","Apenas a data de criação","Nome de quem cadastrou"], c:0},
+            {q:"Tipos diferentes com o mesmo significado tendem a:", a:["Simplificar o uso","Gerar confusão e erros de classificação","Melhorar relatórios","Facilitar suporte"], c:1},
+            {q:"Para auditoria, é útil que o sistema:", a:["Não registre quem usou cada tipo","Registre uso histórico por tipo de convocação","Apague dados antigos","Permita alteração retroativa sem log"], c:1},
+            {q:"Quando há dúvida sobre qual tipo usar, o operador deve:", a:["Escolher qualquer um e seguir","Consultar orientação formal ou manual do módulo","Parar de usar o sistema","Criar um tipo novo por conta própria"], c:1}
+          ]
+        }
+      ]
+    },
+    {
+      id:"prata",
+      medal:"silver",
+      descricaoNivel:
+        "Profissional com domínio das rotinas operacionais e boa compreensão do processo completo de convocação. Atua com autonomia nas atividades diárias e entende como o módulo se conecta a outros componentes do sistema.",
+      percursos:[
+        {
+          id:"p1",
+          titulo:"Percurso 4 – Conferência da quota",
+          descricao:"Conferência e validação da planilha de quota, assegurando consistência nas informações.",
+          xp:25,
+          questions:[
+            {q:"Na conferência da quota, um ponto crítico é:", a:["Conferir apenas o total global","Validar se a distribuição por servidor segue as regras definidas","Ignorar diferenças pequenas","Desconsiderar integrações"], c:1},
+            {q:"Inconsistências na quota costumam indicar:", a:["Uso correto de tipos de convocação","Problemas em parâmetros, regras ou dados de origem","Melhoria de performance","Ausência de regras"], c:1},
+            {q:"É importante comparar a planilha de quota com:", a:["Apenas o histórico anterior","Fontes oficiais de referência e legislação aplicável","Notícias de jornal","Dados não estruturados"], c:1},
+            {q:"Durante a conferência, divergências relevantes devem ser:", a:["Corrigidas sem registro","Registradas, analisadas e tratadas em fluxo próprio","Ignoradas se o prazo for curto","Apenas comunicadas verbalmente"], c:1},
+            {q:"A responsabilidade pela conferência formal é, em geral:", a:["Do usuário qualquer","De área designada (ex.: RH/Planejamento) com papéis definidos","Somente da TI","De um estagiário"], c:1},
+            {q:"Um bom controle de versão da quota permite:", a:["Rastrear de onde surgiu cada alteração","Evitar qualquer histórico","Editar sem segurança","Confundir auditores"], c:0},
+            {q:"Erros de quota não detectados podem gerar:", a:["Maior confiança do servidor","Processos administrativos, glosas ou passivos","Redução de risco","Nenhuma consequência"], c:1},
+            {q:"A checagem cruzada da quota com outros módulos (ex.: folha) ajuda a:", a:["Replicar inconsistências","Detectar divergências antes de executar convocações","Aumentar a complexidade sem ganho","Substituir auditoria"], c:1},
+            {q:"Na prática, é útil usar:", a:["Planilhas sem critérios","Checklists e relatórios padrão de conferência","Anotações dispersas","Somente memória da equipe"], c:1},
+            {q:"Quem identifica erro de quota deve:", a:["Seguir procedimento formal de registro e correção","Apenas ajustar manualmente e seguir","Ignorar para não atrasar","Apagar registros antigos"], c:0}
+          ]
+        },
+        {
+          id:"p2",
+          titulo:"Percurso 5 – Uso do quadro de convocações",
+          descricao:"Utilização eficiente da tela de quadro de convocações, com entendimento de filtros e indicadores.",
+          xp:25,
+          questions:[
+            {q:"O quadro de convocações serve para:", a:["Exibir apenas um registro por vez","Visualizar e gerir o conjunto de convocações com filtros e indicadores","Substituir relatórios oficiais","Lançar dados financeiros"], c:1},
+            {q:"Filtros bem usados permitem:", a:["Esconder informações importantes","Focar em grupos específicos de convocações para análise e ação","Aumentar o tempo de trabalho","Desorganizar a tela"], c:1},
+            {q:"Um exemplo de filtro útil é:", a:["Cor favorita do usuário","Situação da convocação (pendente, concluída, cancelada)","Tipo de monitor usado","Marca do teclado"], c:1},
+            {q:"Indicadores no quadro, como quantidade por status, ajudam a:", a:["Entender gargalos e priorizar ações","Complicar a visibilidade","Substituir toda a gestão","Gerar ruído"], c:0},
+            {q:"Para acompanhamento diário, é recomendado:", a:["Não usar filtros","Ter visões padrão salvas para perfis diferentes de usuário","Atualizar manualmente toda vez","Depender apenas de planilhas externas"], c:1},
+            {q:"A combinação de filtros de data e tipo de convocação é útil para:", a:["Analisar séries históricas e picos de demanda","Zerar a base de dados","Esconder falhas","Evitar registros"], c:0},
+            {q:"Uma boa prática é registrar:", a:["Quem alterou status relevantes diretamente pelo quadro","Apenas quem visualizou a tela","Somente o IP da máquina","Nada"], c:0},
+            {q:"Se o quadro estiver muito lento, uma primeira ação é:", a:["Aumentar ainda mais a quantidade de registros por página","Rever filtros, índices e condições de busca","Excluir convocações antigas sem critério","Trocar a cor da interface"], c:1},
+            {q:"Treinar usuários no uso do quadro reduz:", a:["Dependência de relatórios paralelos e consultas ao suporte","Capacidade de análise","Visibilidade da situação","Padronização"], c:0},
+            {q:"Um quadro bem configurado é peça chave para:", a:["Gestão visual do processo de convocações","Impedir auditorias","Reduzir transparência","Desconectar módulos"], c:0}
+          ]
+        },
+        {
+          id:"p3",
+          titulo:"Percurso 6 – Regras básicas aplicadas",
+          descricao:"Aplicação correta das regras básicas dos processos de convocação.",
+          xp:25,
+          questions:[
+            {q:"Regras básicas de convocação incluem:", a:["Fluxos, prazos, critérios de seleção e bases legais","Preferências pessoais do operador","Somente layout de tela","Cor do ícone"], c:0},
+            {q:"Aplicar regra errada em um caso gera:", a:["Maior segurança jurídica","Risco de contestação ou nulidade do processo","Apenas demora","Nenhum impacto"], c:1},
+            {q:"É importante que as regras estejam:", a:["Apenas na cabeça do gestor","Formalmente documentadas e alinhadas ao sistema","Somente em e-mails antigos","Em bilhetes manuais"], c:1},
+            {q:"A parametrização do sistema deve refletir:", a:["As regras operacionais e legais vigentes","Somente a conveniência do desenvolvedor","Regras de outro órgão sem avaliação","Preferências temporárias"], c:0},
+            {q:"Quando há exceção à regra, o ideal é:", a:["Lançar como se fosse caso normal","Registrar a exceção, o motivo e aprovação competente","Não registrar nada","Criar tipo novo sem análise"], c:1},
+            {q:"Treinamentos de regras básicas são mais efetivos quando:", a:["Usam apenas teoria","Mesclam exemplos reais, exercícios e simulações no sistema","Ocorrem uma única vez","São opcionais"], c:1},
+            {q:"Regras bem aplicadas apoiam:", a:["Transparência, previsibilidade e equidade","Confusão de critérios","Aumento de retrabalho","Redução de segurança"], c:0},
+            {q:"Atualizações de regra devem ser:", a:["Informais e pontuais","Comunicadas, registradas e refletidas em manuais e parametrizações","Feitas apenas em planilhas pessoais","Evitas"], c:1},
+            {q:"Uma boa prática é associar regras a:", a:["Indicadores que mostrem aderência e desvios","Nenhum tipo de medição","Somente percepção do gestor","Sorteio"], c:0},
+            {q:"Quando o sistema não permite aplicar a regra corretamente, deve-se:", a:["Forçar lançamentos errados","Registrar o problema e acionar equipe responsável para ajuste","Ignorar a regra","Usar atalhos não oficiais"], c:1}
+          ]
+        }
+      ]
+    },
+    {
+      id:"ouro",
+      medal:"gold",
+      descricaoNivel:
+        "Profissional com domínio técnico e funcional do módulo, capaz de diagnosticar e corrigir falhas complexas. Entende a fundo as regras de negócio e o comportamento do sistema em diferentes cenários.",
+      percursos:[
+        {
+          id:"o1",
+          titulo:"Percurso 7 – Código de cálculo",
+          descricao:"Interpretação do código da fórmula de cálculo das convocações e validação de resultados.",
+          xp:30,
+          questions:[
+            {q:"Conhecer a fórmula de cálculo permite:", a:["Apenas decorar números","Entender como cada parâmetro influencia o resultado","Impedir melhorias","Substituir testes"], c:1},
+            {q:"Ao revisar um resultado suspeito, o analista deve:", a:["Assumir que o sistema está certo","Reproduzir o cálculo passo a passo com base na fórmula e nos dados de entrada","Ignorar o caso","Alterar manualmente sem registro"], c:1},
+            {q:"Comentários no código ou na documentação servem para:", a:["Registrar lógica e premissas da fórmula","Deixar o código mais lento","Confundir leitores","Substituir testes"], c:0},
+            {q:"Quando uma regra muda por lei, o cálculo deve:", a:["Permanecer igual","Ser ajustado, testado e versionado com clareza","Ser alterado apenas em planilha externa","Ser ocultado dos usuários"], c:1},
+            {q:"Testes de cálculo devem contemplar:", a:["Somente casos simples","Cenários típicos, limites e exceções","Apenas um exemplo","Nenhum histórico"], c:1},
+            {q:"Registrar casos de teste aprovados ajuda a:", a:["Repetir erros","Facilitar retestes após mudança","Confundir auditores","Reduzir rastreabilidade"], c:1},
+            {q:"Quando há divergência entre sistema e planilha do usuário, é importante:", a:["Assumir que a planilha está correta","Comparar parâmetros, fórmula e base de dados dos dois lados","Ignorar a diferença","Refazer tudo descrevendo outra regra"], c:1},
+            {q:"Documentar as variáveis usadas na fórmula ajuda:", a:["Somente programadores","Toda a cadeia de negócio a entender o cálculo","Ninguém","A complicar o processo"], c:1},
+            {q:"Um bom desenho de cálculo inclui:", a:["Entradas, processamento, saídas e exemplos","Apenas uma tabela estática","Somente código-fonte","Apenas descrição jurídica"], c:0},
+            {q:"Erros de cálculo não tratados podem gerar:", a:["Maior confiança","Passivos financeiros e contestações","Nenhum impacto","Somente melhorias"], c:1}
+          ]
+        },
+        {
+          id:"o2",
+          titulo:"Percurso 8 – Tratamentos manuais",
+          descricao:"Execução de tratamentos manuais e convocações corretivas, garantindo integridade dos dados.",
+          xp:30,
+          questions:[
+            {q:"Tratamentos manuais devem ser usados:", a:["Como regra principal","Somente em situações excepcionais e controladas","Sempre que for mais rápido","Para substituir regras"], c:1},
+            {q:"Cada tratamento manual precisa de:", a:["Registro de motivo, responsável e evidências","Nenhuma explicação","Somente um comentário genérico","Aprovação verbal"], c:0},
+            {q:"Se a equipe usa tratamentos manuais frequentes, isso indica:", a:["Regras bem definidas","Problemas de parametrização ou processo","Total aderência","Melhor uso do sistema"], c:1},
+            {q:"Uma boa prática é criar:", a:["Relatórios sobre volume e tipo de tratamentos manuais","Tratamentos sem registro","Apenas anotações pessoais","Fluxos não oficiais"], c:0},
+            {q:"Para reduzir tratamentos manuais, precisa-se:", a:["Ignorar exceções","Analisar causas-raiz e ajustar regras ou integrações","Culpar usuários","Aumentar número de cliques"], c:1},
+            {q:"Tratamento corretivo sem rastreabilidade pode gerar:", a:["Maior transparência","Dificuldade de auditoria e dúvidas sobre integridade","Melhor governança","Nenhum risco"], c:1},
+            {q:"Quem aprova tratamentos sensíveis deve ser:", a:["Qualquer operador","Gestor definido com perfil adequado","Um usuário aleatório","Ninguém"], c:1},
+            {q:"Ferramentas visuais de acompanhamento ajudam a:", a:["Esconder problemas","Identificar padrões de uso de tratamentos manuais","Complicar a gestão","Reduzir indicadores"], c:1},
+            {q:"Documentar lições aprendidas de casos complexos permite:", a:["Repetir erros","Usar os casos como material de treinamento","Esquecer rapidamente","Desconectar processos"], c:1},
+            {q:"A automação de etapas recorrentes de tratamento manual deve:", a:["Ser evitada","Ser avaliada para incorporação como regra oficial","Ser feita sem validação","Substituir toda checagem"], c:1}
+          ]
+        },
+        {
+          id:"o3",
+          titulo:"Percurso 9 – Reversão de convocações",
+          descricao:"Reversão de processos de convocação, avaliando seus impactos em outros módulos.",
+          xp:30,
+          questions:[
+            {q:"Reverter convocação significa:", a:["Apagar todo histórico","Anular ou corrigir lançamento mantendo rastreabilidade","Ignorar o caso","Refazer tudo sem registro"], c:1},
+            {q:"Antes de reverter, é fundamental:", a:["Não analisar impacto","Avaliar integrações com outros módulos (vagas, folha, tempo de serviço etc.)","Apenas perguntar ao colega","Desativar o módulo"], c:1},
+            {q:"Um bom processo de reversão inclui:", a:["Motivo, data, responsável e referência ao registro original","Somente apagar dados","Alterar campos sem log","Uso de senha genérica"], c:0},
+            {q:"Reversões em massa exigem:", a:["Nenhum controle especial","Planejamento, testes e aprovação formal","Execução direta em produção","Somente e-mail informal"], c:1},
+            {q:"Após reverter, recomenda-se:", a:["Não verificar mais nada","Conferir relatórios e indicadores afetados","Apagar logs","Ignorar usuários"], c:1},
+            {q:"Se reversões são muito frequentes, isso pode indicar:", a:["Regras bem definidas","Problemas em processos ou treinamentos","Alta maturidade","Excelência absoluta"], c:1},
+            {q:"O sistema deve impedir:", a:["Qualquer reversão","Reversões sem registro mínimo de justificativa","Registro de justificativa","Auditoria"], c:1},
+            {q:"Fluxos de autorização diferenciados para reversão ajudam a:", a:["Reduzir segurança","Garantir que apenas perfis adequados executem ações sensíveis","Complicar sem motivo","Dispensar registros"], c:1},
+            {q:"Para fins de auditoria, reversões críticas devem ser:", a:["Anônimas","Relatadas em painéis específicos","Omitidas","Editadas depois"], c:1},
+            {q:"Reversão bem gerida contribui para:", a:["Integridade e confiança nos dados","Aumento de erros ocultos","Perda de histórico","Descontrole"], c:0}
+          ]
+        }
+      ]
+    },
+    {
+      id:"diamante",
+      medal:"diamond",
+      descricaoNivel:
+        "É a principal referência técnica e funcional do módulo, com domínio total sobre regras, cálculos e integrações. Atua de forma estratégica, apoiando decisões, revisando processos e promovendo a melhoria contínua do uso do sistema.",
+      percursos:[
+        {
+          id:"d1",
+          titulo:"Percurso 10 – Visão integrada do módulo",
+          descricao:"Visão completa e integrada do módulo e de suas interações com outros componentes do sistema.",
+          xp:35,
+          questions:[
+            {q:"Visão integrada significa:", a:["Olhar apenas para a tela atual","Entender como o módulo se relaciona com outros processos e sistemas","Ignorar integrações","Focar só em tecnologia"], c:1},
+            {q:"Um exemplo de integração importante é:", a:["Convocações x Controle de Vagas","Convocações x Cor do monitor","Convocações x Papel da impressora","Convocações x Clima"], c:0},
+            {q:"Mapear integrações ajuda a:", a:["Descobrir onde decisões de um módulo impactam outro","Complicar sem ganho","Dispensar testes","Ocultar falhas"], c:0},
+            {q:"Documentos de arquitetura devem registrar:", a:["Apenas nomes das telas","Fluxos, integrações, pontos de entrada e saída","Somente regras jurídicas","Nada"], c:1},
+            {q:"Em projetos de mudança, é essencial:", a:["Avaliar impacto apenas local","Avaliar impactos sistêmicos, inclusive em relatórios e indicadores","Pensar só em prazos","Desconsiderar integrações"], c:1},
+            {q:"Reuniões interáreas sobre o módulo ajudam a:", a:["Criar conflitos","Alinhar expectativas, restrições e oportunidades","Prejudicar comunicação","Isolar times"], c:1},
+            {q:"Visão integrada apoia decisões de:", a:["Curto prazo apenas","Gestão estratégica de pessoas, vagas e orçamentos","Marketing externo","TI isolada"], c:1},
+            {q:"Pontos de integração críticos deveriam ter:", a:["Nenhum monitoramento","Indicadores e alertas específicos","Apenas e-mails","Logs ocultos"], c:1},
+            {q:"Quando há incidente em outro módulo, o especialista de convocações deve:", a:["Ignorar","Avaliar se há relação com regras de convocação","Desativar o sistema","Culpar usuários"], c:1},
+            {q:"Visão integrada é característica de:", a:["Usuário iniciante","Especialista de referência no módulo","Quem não conhece o processo","Somente desenvolvedores"], c:1}
+          ]
+        },
+        {
+          id:"d2",
+          titulo:"Percurso 11 – Padrões e parametrizações",
+          descricao:"Capacidade de definir padrões, revisar regras e validar parametrizações.",
+          xp:35,
+          questions:[
+            {q:"Definir padrões significa:", a:["Deixar cada um usar como quiser","Estabelecer formas consistentes de uso, nomes e regras","Despadronizar","Trabalhar sem critério"], c:1},
+            {q:"Parametrizações mal geridas levam a:", a:["Processos robustos","Comportamentos inconsistentes do sistema","Maior governança","Redução de riscos"], c:1},
+            {q:"Revisar regras periodicamente é importante porque:", a:["As leis e processos mudam ao longo do tempo","Nada nunca muda","Complica o trabalho","É inútil"], c:0},
+            {q:"Toda parametrização relevante deve ter:", a:["Registro de quem decidiu, motivo e data","Apenas valor atual","Segredo absoluto","Controle informal"], c:0},
+            {q:"Ambiente de testes é usado para:", a:["Alterar direto em produção","Validar parametrizações antes de aplicar em produção","Armazenar dados aleatórios","Dispensar homologação"], c:1},
+            {q:"Checklists de parametrização ajudam a:", a:["Garantir que pontos críticos sejam sempre avaliados","Aumentar riscos","Confundir equipe","Reduzir transparência"], c:0},
+            {q:"Padrões devem ser:", a:["Totalmente rígidos sem exceção","Flexíveis, mas com critérios claros para exceções","Ignorados","Secretos"], c:1},
+            {q:"Treinar a equipe nos padrões definidos evita:", a:["Uso incorreto e múltiplas versões de verdade","Adoção do modelo","Padronização","Governança"], c:0},
+            {q:"Parametrizações alinhadas ao planejamento estratégico permitem:", a:["Que o sistema reforce as prioridades da organização","Aumento de inconsistências","Descolamento do negócio","Somente estética"], c:0},
+            {q:"O papel do especialista é:", a:["Apenas executar tarefas","Conduzir revisão de padrões, ouvir áreas e propor melhorias","Trabalhar isolado","Ignorar feedbacks"], c:1}
+          ]
+        },
+        {
+          id:"d3",
+          titulo:"Percurso 12 – Apoio estratégico",
+          descricao:"Apoio estratégico a outras áreas e coordenação de capacitações internas; responsabilidade pela excelência do módulo.",
+          xp:35,
+          questions:[
+            {q:"Apoio estratégico significa:", a:["Responder dúvidas pontuais apenas","Usar conhecimento do módulo para apoiar decisões de alto impacto","Fazer tarefas básicas","Evitar participação em fóruns"], c:1},
+            {q:"Um especialista estratégico deve:", a:["Entender só a tecnologia","Conhecer regras, contexto institucional e indicadores","Focar apenas em relatórios técnicos","Ignorar planejamento"], c:1},
+            {q:"Capacitações internas bem planejadas geram:", a:["Dependência maior do especialista","Autonomia da equipe e redução de erros","Aumento de retrabalho","Nenhuma mudança"], c:1},
+            {q:"Participar de comitês e fóruns de decisão ajuda o especialista a:", a:["Entender prioridades e antecipar ajustes no módulo","Isolar-se","Complicar fluxos","Perder visão sistêmica"], c:0},
+            {q:"Um indicador relevante para atuação estratégica é:", a:["Quantidade de cliques na tela","Impacto do módulo em resultados-chave (SLA, glosa, satisfação etc.)","Cor do botão","Número de usuários logados"], c:1},
+            {q:"A visão de melhoria contínua envolve:", a:["Manter tudo como está","Planejar, testar, medir e ajustar mudanças","Mudar sem medir","Apenas reagir a crises"], c:1},
+            {q:"O especialista estratégico deve estimular:", a:["Uso improvisado do sistema","Registro de boas práticas, lições aprendidas e inovações","Falta de documentação","Centralização de conhecimento"], c:1},
+            {q:"Quando identifica oportunidade de inovação, o especialista pode:", a:["Ignorar e focar no dia a dia","Estruturar proposta, estimar ganhos e levar ao comitê adequado","Apenas comentar informalmente","Mudar silenciosamente"], c:1},
+            {q:"Na cultura de excelência, o módulo de Convocações é visto como:", a:["Apenas uma obrigação","Ferramenta crítica de gestão de pessoas e riscos","Algo isolado","Somente software"], c:1},
+            {q:"Ser referência estratégica significa:", a:["Ser o único que sabe usar o sistema","Influenciar positivamente processos, aprendizagem e resultados","Evitar compartilhamento de conhecimento","Fugir de responsabilidades"], c:1}
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+const state = {
+  completed: {} // idPercurso -> {score, xp}
+};
+
+let currentQuiz = null;
+
+const duoPath = document.getElementById("duoPath");
+const xpTotalEl = document.querySelector("[data-xp-total]");
+const emblemasTotalEl = document.querySelector("[data-emblemas-total]");
+const medalMaxEl = document.querySelector("[data-medal-max]");
+const emblemaGrid = document.getElementById("emblemaGrid");
+
+const quizModal = document.getElementById("quizModal");
+const quizTitleEl = document.querySelector("[data-quiz-title]");
+const quizSubtitleEl = document.querySelector("[data-quiz-subtitle]");
+const quizCounterEl = document.querySelector("[data-quiz-counter]");
+const quizQuestionEl = document.querySelector("[data-quiz-question]");
+const quizOptionsEl = document.getElementById("quizOptions");
+const quizBarFill = document.getElementById("quizBarFill");
+const quizFeedback = document.getElementById("quizFeedback");
+const quizConfirmBtn = document.getElementById("quizConfirmBtn");
+const quizCancelBtn = document.getElementById("quizCancelBtn");
+const quizCloseBtn = document.getElementById("quizCloseBtn");
+
+quizCancelBtn.addEventListener("click", () => closeQuiz(true));
+quizCloseBtn.addEventListener("click", () => closeQuiz(true));
+
+quizConfirmBtn.addEventListener("click", () => {
+  if (!currentQuiz) return;
+  const q = currentQuiz.questions[currentQuiz.index];
+  if (currentQuiz.selectedIndex == null) return;
+
+  const correct = currentQuiz.selectedIndex === q.c;
+  if (correct) currentQuiz.correct++;
+
+  quizFeedback.classList.remove("ok","bad");
+  quizFeedback.classList.add(correct ? "ok" : "bad");
+  quizFeedback.textContent = correct ? "Resposta correta! Vamos para a próxima questão." :
+                                       "Resposta incorreta. A próxima questão já considera essa aprendizagem.";
+
+  currentQuiz.index++;
+  currentQuiz.selectedIndex = null;
+
+  if (currentQuiz.index >= currentQuiz.questions.length) {
+    finishQuiz();
+  } else {
+    setTimeout(() => {
+      quizFeedback.textContent = "";
+      renderQuizQuestion();
+    }, 600);
+  }
+});
+
+function isTierUnlocked(tierIndex) {
+  if (tierIndex === 0) return true;
+  const prevTier = trilhaConvocacoes.tiers[tierIndex - 1];
+  return prevTier.percursos.every(p => state.completed[p.id]);
+}
+
+function isPercursoUnlocked(tierIndex, percursoIndex) {
+  if (!isTierUnlocked(tierIndex)) return false;
+  if (percursoIndex === 0) return true;
+  const tier = trilhaConvocacoes.tiers[tierIndex];
+  const prev = tier.percursos[percursoIndex - 1];
+  return !!state.completed[prev.id];
+}
+
+function renderPath() {
+  duoPath.innerHTML = '<div class="duo-rail"></div>';
+
+  trilhaConvocacoes.tiers.forEach((tier, tierIndex) => {
+    const tierBlock = document.createElement("div");
+    tierBlock.className = "tier-block";
+    tierBlock.dataset.tier = tier.id;
+
+    const heading = document.createElement("div");
+    heading.className = "tier-heading";
+
+    const pill = document.createElement("div");
+    pill.className = "medal-pill " + tier.medal;
+    const iconSpan = document.createElement("span");
+    iconSpan.className = "icon";
+    iconSpan.textContent = medalEmoji[tier.medal];
+    const textSpan = document.createElement("span");
+    textSpan.textContent = "Medalha " + medalName[tier.medal];
+
+    pill.appendChild(iconSpan);
+    pill.appendChild(textSpan);
+
+    const descWrap = document.createElement("div");
+    descWrap.style.flex = "1";
+
+    const tierDesc = document.createElement("div");
+    tierDesc.className = "tier-desc";
+    tierDesc.textContent = tier.descricaoNivel;
+
+    const lockInfo = document.createElement("div");
+    lockInfo.className = "tier-lock";
+    const unlocked = isTierUnlocked(tierIndex);
+    lockInfo.innerHTML = unlocked
+      ? "🔓 Nível liberado – conclua os percursos para consolidar a medalha."
+      : "🔒 Nível bloqueado – conclua todos os percursos da medalha anterior para avançar.";
+
+    descWrap.appendChild(tierDesc);
+    descWrap.appendChild(lockInfo);
+
+    heading.appendChild(pill);
+    heading.appendChild(descWrap);
+
+    const bau = document.createElement("div");
+    bau.className = "bau " + (isTierCompleted(tier) ? "open" : "locked");
+    bau.innerHTML = isTierCompleted(tier) ? "🧰" : "📦";
+    bau.title = isTierCompleted(tier)
+      ? "Baú aberto – medalha consolidada."
+      : "Baú trancado – conclua todos os percursos com nota ≥ 80%.";
+
+    tierBlock.appendChild(heading);
+    tierBlock.appendChild(bau);
+
+    tier.percursos.forEach((p, idx) => {
+      const percurso = document.createElement("div");
+      percurso.className = "percurso";
+
+      const node = document.createElement("div");
+      node.className = "percurso-node";
+      node.dataset.percursoId = p.id;
+      node.textContent = idx + 1;
+
+      const available = isPercursoUnlocked(tierIndex, idx);
+      const completed = !!state.completed[p.id];
+
+      if (!available) node.classList.add("locked");
+      if (completed) node.classList.add("completed");
+
+      const line = document.createElement("div");
+      line.className = "percurso-line";
+
+      const card = document.createElement("div");
+      card.className = "percurso-card";
+
+      const title = document.createElement("div");
+      title.className = "percurso-title";
+      title.textContent = p.titulo;
+
+      const detail = document.createElement("div");
+      detail.className = "percurso-detail";
+      detail.textContent = p.descricao;
+
+      const meta = document.createElement("div");
+      meta.className = "percurso-meta";
+      meta.textContent = `Desafio com ${p.questions.length} perguntas · Necessário acerto mínimo de 80% (8/10).`;
+
+      const actions = document.createElement("div");
+      actions.className = "percurso-actions";
+
+      const status = document.createElement("div");
+      status.className = "status-label";
+      if (completed) {
+        const s = state.completed[p.id];
+        status.classList.add("ok");
+        status.textContent = `Aprovado – ${s.score}/${p.questions.length} (${s.score * 10}%) · XP +${p.xp}`;
+      } else if (!available) {
+        status.textContent = "Aguardando percurso anterior.";
+      } else {
+        status.textContent = "Pendente.";
+      }
+
+      const btn = document.createElement("button");
+      btn.innerHTML = "Iniciar desafio";
+      btn.disabled = !available || completed;
+      btn.addEventListener("click", () => {
+        openQuiz(tier, p);
+      });
+
+      const resetBtn = document.createElement("button");
+      resetBtn.textContent = "Reset";
+      resetBtn.className = "secondary";
+      resetBtn.disabled = !completed;
+      resetBtn.addEventListener("click", () => {
+        delete state.completed[p.id];
+        updateAll();
+      });
+
+      actions.appendChild(status);
+      actions.appendChild(btn);
+      actions.appendChild(resetBtn);
+
+      card.appendChild(title);
+      card.appendChild(detail);
+      card.appendChild(meta);
+      card.appendChild(actions);
+
+      percurso.appendChild(node);
+      percurso.appendChild(line);
+      percurso.appendChild(card);
+
+      tierBlock.appendChild(percurso);
+    });
+
+    duoPath.appendChild(tierBlock);
+  });
+}
+
+function isTierCompleted(tier) {
+  return tier.percursos.every(p => state.completed[p.id]);
+}
+
+function openQuiz(tier, percurso) {
+  currentQuiz = {
+    tierId: tier.id,
+    medal: tier.medal,
+    percursoId: percurso.id,
+    titulo: percurso.titulo,
+    descricao: percurso.descricao,
+    questions: percurso.questions,
+    index: 0,
+    correct: 0,
+    selectedIndex: null
+  };
+  quizTitleEl.textContent = `${percurso.titulo} (${medalName[tier.medal]})`;
+  quizSubtitleEl.textContent = percurso.descricao;
+  quizFeedback.textContent = "";
+  quizFeedback.className = "quiz-feedback";
+  quizConfirmBtn.disabled = true;
+  renderQuizQuestion();
+  quizModal.classList.add("active");
+}
+
+function renderQuizQuestion() {
+  const q = currentQuiz.questions[currentQuiz.index];
+  const total = currentQuiz.questions.length;
+  quizCounterEl.textContent = `Pergunta ${currentQuiz.index + 1}/${total}`;
+  quizBarFill.style.width = `${((currentQuiz.index) / total) * 100}%`;
+  quizQuestionEl.textContent = q.q;
+  quizOptionsEl.innerHTML = "";
+  quizConfirmBtn.disabled = true;
+
+  q.a.forEach((text, idx) => {
+    const opt = document.createElement("div");
+    opt.className = "quiz-option";
+    opt.dataset.index = idx;
+    const indexSpan = document.createElement("div");
+    indexSpan.className = "quiz-option-index";
+    indexSpan.textContent = String.fromCharCode(65 + idx);
+    const textSpan = document.createElement("div");
+    textSpan.className = "quiz-option-text";
+    textSpan.textContent = text;
+    opt.appendChild(indexSpan);
+    opt.appendChild(textSpan);
+    opt.addEventListener("click", () => {
+      currentQuiz.selectedIndex = idx;
+      Array.from(quizOptionsEl.children).forEach(o => o.classList.remove("selected"));
+      opt.classList.add("selected");
+      quizConfirmBtn.disabled = false;
+    });
+    quizOptionsEl.appendChild(opt);
+  });
+}
+
+function finishQuiz() {
+  const total = currentQuiz.questions.length;
+  const score = currentQuiz.correct;
+  const percent = score / total;
+  const approved = percent >= PASS_PERCENT;
+
+  quizBarFill.style.width = "100%";
+
+  quizFeedback.classList.remove("bad","ok");
+  quizFeedback.classList.add(approved ? "ok" : "bad");
+  quizFeedback.textContent = approved
+    ? `Parabéns! Você acertou ${score}/${total} (${score * 10}%). Competência validada para este percurso.`
+    : `Você acertou ${score}/${total} (${score * 10}%). É necessário ao menos 8 acertos para validar este percurso.`;
+
+  quizConfirmBtn.disabled = true;
+  quizCancelBtn.textContent = "Fechar";
+
+  if (approved) {
+    // atribuir XP do percurso correspondente
+    const tier = trilhaConvocacoes.tiers.find(t => t.id === currentQuiz.tierId);
+    const percurso = tier.percursos.find(p => p.id === currentQuiz.percursoId);
+    state.completed[currentQuiz.percursoId] = {score, xp:percurso.xp};
+  }
+
+  setTimeout(() => {
+    closeQuiz(false);
+  }, 1000);
+}
+
+function closeQuiz(cancelOnly) {
+  quizModal.classList.remove("active");
+  currentQuiz = null;
+  quizCancelBtn.textContent = "Cancelar";
+  if (!cancelOnly) {
+    updateAll();
+  } else {
+    updateAll(); // mesmo cancelando, atualiza tela (nenhuma mudança se não aprovou)
+  }
+}
+
+function updateSummary() {
+  let totalXp = 0;
+  let emblemas = 0;
+  Object.values(state.completed).forEach(c => {
+    totalXp += c.xp;
+    emblemas += 1;
+  });
+
+  xpTotalEl.textContent = totalXp;
+  emblemasTotalEl.textContent = emblemas;
+
+  let highestMedal = null;
+  trilhaConvocacoes.tiers.forEach(tier => {
+    if (isTierCompleted(tier)) highestMedal = tier.medal;
+  });
+  medalMaxEl.textContent = highestMedal ? `Medalha ${medalName[highestMedal]}` : "—";
+
+  renderEmblemas();
+}
+
+function renderEmblemas() {
+  emblemaGrid.innerHTML = "";
+  const completedIds = Object.keys(state.completed);
+  if (completedIds.length === 0) {
+    const msg = document.createElement("div");
+    msg.className = "emblema-text-desc";
+    msg.textContent = "Nenhum emblema conquistado ainda. Conclua um percurso com nota ≥ 80% para liberar o primeiro emblema Bronze.";
+    emblemaGrid.appendChild(msg);
+    return;
+  }
+
+  trilhaConvocacoes.tiers.forEach(tier => {
+    tier.percursos.forEach(p => {
+      if (!state.completed[p.id]) return;
+      const card = document.createElement("div");
+      card.className = "emblema-card";
+
+      const icon = document.createElement("div");
+      icon.className = "emblema-icon " + tier.medal;
+      icon.textContent = medalEmoji[tier.medal];
+
+      const textWrap = document.createElement("div");
+      const title = document.createElement("div");
+      title.className = "emblema-text-title " + tier.medal;
+      title.textContent = `Emblema ${medalName[tier.medal]} – ${p.titulo}`;
+
+      const desc = document.createElement("div");
+      desc.className = "emblema-text-desc";
+      const s = state.completed[p.id];
+      desc.textContent = `Concluído com ${s.score}/${p.questions.length} questões (≥80%). XP +${s.xp}.`;
+
+      textWrap.appendChild(title);
+      textWrap.appendChild(desc);
+
+      card.appendChild(icon);
+      card.appendChild(textWrap);
+
+      emblemaGrid.appendChild(card);
+    });
+  });
+}
+
+function updateAll() {
+  renderPath();
+  updateSummary();
+}
+
+updateAll();
+</script>
+
+</body>
+</html>
